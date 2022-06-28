@@ -20,6 +20,7 @@ package acp
 import (
 	"github.com/traefik/hub-agent-kubernetes/pkg/acp/basicauth"
 	"github.com/traefik/hub-agent-kubernetes/pkg/acp/jwt"
+	"github.com/traefik/hub-agent-kubernetes/pkg/acp/oidc"
 	hubv1alpha1 "github.com/traefik/hub-agent-kubernetes/pkg/crd/api/hub/v1alpha1"
 )
 
@@ -27,6 +28,7 @@ import (
 type Config struct {
 	JWT       *jwt.Config
 	BasicAuth *basicauth.Config
+	OIDC      *oidc.Config
 }
 
 // ConfigFromPolicy returns an ACP configuration for the given policy.
@@ -61,6 +63,29 @@ func ConfigFromPolicy(policy *hubv1alpha1.AccessControlPolicy) *Config {
 			},
 		}
 
+	case policy.Spec.OIDC != nil:
+		oidcCfg := policy.Spec.OIDC
+
+		return &Config{
+			OIDC: &oidc.Config{
+				Issuer:                oidcCfg.Issuer,
+				ClientID:              oidcCfg.ClientID,
+				ClientSecret:          oidcCfg.ClientSecret,
+				PKCE:                  oidcCfg.PKCE,
+				RedirectURL:           oidcCfg.RedirectURL,
+				LoginURL:              "",
+				LogoutURL:             "",
+				PostLoginRedirectURL:  "",
+				PostLogoutRedirectURL: "",
+				DisableLogin:          false,
+				Scopes:                oidcCfg.Scopes,
+				AuthParams:            nil,
+				StateCookie:           nil,
+				Session:               nil,
+				ForwardHeaders:        nil,
+				Claims:                "",
+			},
+		}
 	default:
 		return &Config{}
 	}

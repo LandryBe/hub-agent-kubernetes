@@ -48,6 +48,7 @@ type AccessControlPolicy struct {
 type AccessControlPolicySpec struct {
 	JWT       *AccessControlPolicyJWT       `json:"jwt,omitempty"`
 	BasicAuth *AccessControlPolicyBasicAuth `json:"basicAuth,omitempty"`
+	OIDC      *AccessControlOIDC            `json:"oidc,omitempty"`
 }
 
 // Hash return AccessControlPolicySpec hash.
@@ -82,6 +83,19 @@ type AccessControlPolicyBasicAuth struct {
 	Realm                    string   `json:"realm,omitempty"`
 	StripAuthorizationHeader bool     `json:"stripAuthorizationHeader,omitempty"`
 	ForwardUsernameHeader    string   `json:"forwardUsernameHeader,omitempty"`
+}
+
+// AccessControlOIDC holds the OIDC authentication configuration.
+type AccessControlOIDC struct {
+	Issuer       string `json:"issuer,omitempty"  toml:"issuer,omitempty" yaml:"issuer,omitempty"`
+	ClientID     string `json:"clientId,omitempty"  toml:"clientId,omitempty" yaml:"clientId,omitempty"`
+	ClientSecret string `json:"clientSecret,omitempty"  toml:"clientSecret,omitempty" yaml:"clientSecret,omitempty"`
+	PKCE         bool   `json:"pkce,omitempty" toml:"pkce,omitempty" yaml:"pkce,omitempty"`
+	RedirectURL  string `json:"redirectUrl,omitempty"  toml:"redirectUrl,omitempty" yaml:"redirectUrl,omitempty"`
+
+	Scopes         []string          `json:"scopes,omitempty" toml:"scopes,omitempty" yaml:"scopes,omitempty"`
+	ForwardHeaders map[string]string `json:"forwardHeaders,omitempty" toml:"forwardHeaders,omitempty" yaml:"forwardHeaders,omitempty"`
+	Claims         string            `json:"claims,omitempty" toml:"claims,omitempty" yaml:"claims,omitempty"`
 }
 
 // AccessControlPolicyStatus is the status of the access control policy.
