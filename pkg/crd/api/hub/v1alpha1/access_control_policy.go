@@ -90,8 +90,8 @@ type AccessControlOIDC struct {
 	Issuer       string `json:"issuer,omitempty"  toml:"issuer,omitempty" yaml:"issuer,omitempty"`
 	ClientID     string `json:"clientId,omitempty"  toml:"clientId,omitempty" yaml:"clientId,omitempty"`
 	ClientSecret string `json:"clientSecret,omitempty"  toml:"clientSecret,omitempty" yaml:"clientSecret,omitempty"`
-	PKCE         bool   `json:"pkce,omitempty" toml:"pkce,omitempty" yaml:"pkce,omitempty"`
 	RedirectURL  string `json:"redirectUrl,omitempty"  toml:"redirectUrl,omitempty" yaml:"redirectUrl,omitempty"`
+	LogoutURL    string `json:"logoutUrl,omitempty" toml:"logoutUrl,omitempty" yaml:"logoutUrl,omitempty"`
 
 	Scopes         []string          `json:"scopes,omitempty" toml:"scopes,omitempty" yaml:"scopes,omitempty"`
 	ForwardHeaders map[string]string `json:"forwardHeaders,omitempty" toml:"forwardHeaders,omitempty" yaml:"forwardHeaders,omitempty"`

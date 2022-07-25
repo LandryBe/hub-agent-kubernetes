@@ -85,7 +85,6 @@ type SessionStore interface {
 // Handler performs OIDC authentication and authorisation on incoming requests.
 type Handler struct {
 	name string
-	pkce bool
 	rand random
 
 	verifier   IDTokenVerifier
@@ -129,8 +128,6 @@ func NewHandler(ctx context.Context, cfg *Config, name string) (*Handler, error)
 		}
 	}
 
-	fmt.Println("AAAAAAAAAAAAA", cfg)
-
 	block, err := aes.NewCipher([]byte(cfg.StateCookie.Secret))
 	if err != nil {
 		return nil, fmt.Errorf("new cipher: %w", err)
@@ -143,7 +140,6 @@ func NewHandler(ctx context.Context, cfg *Config, name string) (*Handler, error)
 
 	return &Handler{
 		name:           name,
-		pkce:           cfg.PKCE,
 		cfg:            cfg,
 		verifier:       verifier,
 		oauth:          oauth,
@@ -173,23 +169,26 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	l := log.With().Str("handler_type", "OIDC").Str("handler_name", h.name).Logger()
 
 	// TODO : handle delete session
-	//logoutURL := resolveURL(req, h.cfg.LogoutURL)
-	//if isURL(req, logoutURL) && req.Method == http.MethodDelete {
-	//	if err := h.session.Delete(rw, req); err != nil {
-	//		l.Debug().Err(err).Msg("Unable to delete the session")
-	//	}
-	//
-	//	redirectURL := resolveURL(req, h.cfg.PostLogoutRedirectURL)
-	//	if redirectURL != "" {
-	//		http.Redirect(rw, req, redirectURL, http.StatusFound)
-	//
-	//		return
-	//	}
-	//
-	//	rw.WriteHeader(http.StatusNoContent)
-	//
-	//	return
-	//}
+	logoutURL := resolveURL(req, h.cfg.LogoutURL)
+	forwardedURL := fmt.Sprintf("%s://%s%s", req.Header.Get("X-Forwarded-Proto"), req.Header.Get("X-Forwarded-Host"), req.Header.Get("X-Forwarded-Uri"))
+	forwardedMethod := req.Header.Get("X-Forwarded-Method")
+
+	if isURL(forwardedURL, logoutURL) && forwardedMethod == http.MethodDelete {
+		if err := h.session.Delete(rw, req); err != nil {
+			l.Debug().Err(err).Msg("Unable to delete the session")
+		}
+
+		redirectURL := resolveURL(req, h.cfg.PostLogoutRedirectURL)
+		if redirectURL != "" {
+			http.Redirect(rw, req, redirectURL, http.StatusFound)
+
+			return
+		}
+
+		rw.WriteHeader(http.StatusNoContent)
+
+		return
+	}
 
 	sess, err := h.session.Get(req)
 	if err != nil {
@@ -199,18 +198,14 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	forwardedURL := fmt.Sprintf("%s://%s%s", req.Header.Get("X-Forwarded-Proto"), req.Header.Get("X-Forwarded-Host"), req.Header.Get("X-Forwarded-Uri"))
-
 	// We get in here either because we're in the initial run (no session yet),
 	// or if we have an expired session, but session refreshing is disabled by
 	// configuration. For the gritty details, it means we don't need refresh tokens (so
 	// we won't ask for them), so we don't need to be in offline access, and we don't
 	// need the (user consent) prompt after asking for credentials.
 	if sess == nil || (sess.IsExpired() && !(*h.cfg.Session.Refresh)) {
-		l.Debug().Msg("Session is nil")
 		redirectURL := resolveURL(req, h.cfg.RedirectURL)
 
-		l.Debug().Msg("!!!!!!!!!!! RedirectURL" + redirectURL + "forwardedURL: " + forwardedURL)
 		if isURL(forwardedURL, redirectURL) {
 			l.Debug().Msg("Handle provider callback")
 			// 5th step of the diagram, we're handling the redirected response from the auth server.
@@ -232,7 +227,6 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 		return
 	}
-	l.Debug().Msg("Session found !")
 
 	var refreshSession bool
 	sess, refreshSession, err = h.maybeRefreshSession(req.Context(), sess)
@@ -352,28 +346,14 @@ func (h *Handler) maybeRefreshSession(ctx context.Context, sess *SessionData) (s
 
 func (h *Handler) redirectToProvider(rw http.ResponseWriter, req *http.Request, redirectURL string) {
 	l := log.With().Str("handler_type", "JWT").Str("handler_name", h.name).Logger()
-
-	var codeVerifier string
-	if h.pkce {
-		var err error
-		codeVerifier, err = newCodeVerifier(64)
-		if err != nil {
-			l.Debug().Err(err).Msg("Unable to generate code verifier")
-			http.Error(rw, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-
-			return
-		}
-	}
-
 	originalURL := fmt.Sprintf("%s://%s%s", req.Header.Get("X-Forwarded-Proto"), req.Header.Get("X-Forwarded-Host"), req.Header.Get("X-Forwarded-Uri"))
 
 	l.Debug().Msg("Set OriginURL in state: " + originalURL)
 
 	state := StateData{
-		RedirectID:   h.rand.String(20),
-		Nonce:        h.rand.String(20),
-		OriginURL:    originalURL,
-		CodeVerifier: codeVerifier,
+		RedirectID: h.rand.String(20),
+		Nonce:      h.rand.String(20),
+		OriginURL:  originalURL,
 	}
 
 	stateCookie, err := h.newStateCookie(state)
@@ -415,9 +395,6 @@ func (h *Handler) redirectToProvider(rw http.ResponseWriter, req *http.Request, 
 		}
 		opts = append(opts, oauth2.SetAuthURLParam(k, v))
 	}
-	if h.pkce {
-		opts = appendCodeChallengeOptions(opts, state.CodeVerifier)
-	}
 
 	// 2nd step of diagram.
 	// which leads to 3rd step of diagram:
@@ -457,9 +434,6 @@ func (h *Handler) handleProviderCallback(rw http.ResponseWriter, req *http.Reque
 
 	opts := []oauth2.AuthCodeOption{
 		oauth2.SetAuthURLParam("redirect_uri", redirectURL),
-	}
-	if h.pkce {
-		opts = append(opts, oauth2.SetAuthURLParam("code_verifier", state.CodeVerifier))
 	}
 
 	// 6th and 7th step of diagram.

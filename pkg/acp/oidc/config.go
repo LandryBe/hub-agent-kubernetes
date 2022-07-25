@@ -14,7 +14,6 @@ type Config struct {
 	Issuer       string `json:"issuer,omitempty"  toml:"issuer,omitempty" yaml:"issuer,omitempty"`
 	ClientID     string `json:"clientId,omitempty"  toml:"clientId,omitempty" yaml:"clientId,omitempty"`
 	ClientSecret string `json:"clientSecret,omitempty"  toml:"clientSecret,omitempty" yaml:"clientSecret,omitempty"`
-	PKCE         bool   `json:"pkce,omitempty" toml:"pkce,omitempty" yaml:"pkce,omitempty"`
 
 	RedirectURL           string            `json:"redirectUrl,omitempty"  toml:"redirectUrl,omitempty" yaml:"redirectUrl,omitempty"`
 	LoginURL              string            `json:"loginUrl,omitempty"  toml:"loginUrl,omitempty" yaml:"loginUrl,omitempty"`
