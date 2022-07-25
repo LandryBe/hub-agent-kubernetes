@@ -114,10 +114,6 @@ func ApplyDefaultValues(cfg *Config) {
 		cfg.StateCookie.SameSite = "lax"
 	}
 
-	if cfg.StateCookie.Secret == "" {
-		cfg.StateCookie.Secret = "123456789abcdefh"
-	}
-
 	if cfg.Session == nil {
 		cfg.Session = &AuthSession{}
 	}
@@ -148,10 +144,6 @@ func ApplyDefaultValues(cfg *Config) {
 
 	if cfg.Session.Sliding == nil {
 		cfg.Session.Sliding = ptrBool(true)
-	}
-
-	if cfg.Session.Secret == "" {
-		cfg.Session.Secret = "123456789abcdefh"
 	}
 }
 

@@ -93,9 +93,25 @@ type AccessControlOIDC struct {
 	RedirectURL  string `json:"redirectUrl,omitempty"  toml:"redirectUrl,omitempty" yaml:"redirectUrl,omitempty"`
 	LogoutURL    string `json:"logoutUrl,omitempty" toml:"logoutUrl,omitempty" yaml:"logoutUrl,omitempty"`
 
+	StateCookie StateCookie `json:"stateCookie" toml:"stateCookie" yaml:"stateCookie"`
+	Session     Session     `json:"session" toml:"session" yaml:"session"`
+
 	Scopes         []string          `json:"scopes,omitempty" toml:"scopes,omitempty" yaml:"scopes,omitempty"`
 	ForwardHeaders map[string]string `json:"forwardHeaders,omitempty" toml:"forwardHeaders,omitempty" yaml:"forwardHeaders,omitempty"`
 	Claims         string            `json:"claims,omitempty" toml:"claims,omitempty" yaml:"claims,omitempty"`
+}
+
+type StateCookie struct {
+	Secret   string `json:"secret" toml:"secret" yaml:"secret"`
+	SameSite string `json:"sameSite" toml:"sameSite" yaml:"sameSite"`
+	Secure   bool   `json:"secure" toml:"secure" yaml:"secure"`
+}
+
+type Session struct {
+	Secret   string `json:"secret" toml:"secret" yaml:"secret"`
+	SameSite string `json:"sameSite" toml:"sameSite" yaml:"sameSite"`
+	Secure   bool   `json:"secure" toml:"secure" yaml:"secure"`
+	Refresh  bool   `json:"refresh" toml:"refresh" yaml:"refresh"`
 }
 
 // AccessControlPolicyStatus is the status of the access control policy.
