@@ -1,30 +1,17 @@
 package oidc
 
 import (
-	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func Test_yolo(t *testing.T) {
-	forwardedURI := "/a?b=allo"
-	u, err := url.Parse(forwardedURI)
-	require.NoError(t, err)
-
-	v := u.Query().Get("b")
-
-	fmt.Println(v)
-}
-
 func TestCookieSessionStore_Delete(t *testing.T) {
-	store, err := NewCookieSessionStore("test", &AuthSession{
+	store, err := NewCookieSessionStore("test-name", &AuthSession{
 		Secret:   "secret1234567890",
-		Name:     "%s-name",
 		Path:     "/",
 		Domain:   "example.com",
 		Expiry:   ptrInt(600),
@@ -48,7 +35,7 @@ func TestCookieSessionStore_Delete(t *testing.T) {
 		Value: "chunk cookies part2",
 	})
 	req.AddCookie(&http.Cookie{
-		Name:  "test2-name",
+		Name:  "plop2-name",
 		Value: "value2",
 	})
 
@@ -66,9 +53,8 @@ func TestCookieSessionStore_Delete(t *testing.T) {
 }
 
 func TestCookieSessionStore_RemoveCookieOnlyRemovesOurCookie(t *testing.T) {
-	store, err := NewCookieSessionStore("test", &AuthSession{
+	store, err := NewCookieSessionStore("test-name", &AuthSession{
 		Secret:   "secret1234567890",
-		Name:     "%s-name",
 		Path:     "/",
 		Domain:   "example.com",
 		Expiry:   ptrInt(600),
@@ -92,19 +78,18 @@ func TestCookieSessionStore_RemoveCookieOnlyRemovesOurCookie(t *testing.T) {
 		Value: "chunk cookies part2",
 	})
 	req.AddCookie(&http.Cookie{
-		Name:  "test2-name",
+		Name:  "custom-name",
 		Value: "value2",
 	})
 
 	store.RemoveCookie(req)
 
-	assert.Equal(t, "test2-name=value2", req.Header.Get("Cookie"))
+	assert.Equal(t, "custom-name=value2", req.Header.Get("Cookie"))
 }
 
 func TestCookieSessionStore_Create(t *testing.T) {
-	store, err := NewCookieSessionStore("test", &AuthSession{
+	store, err := NewCookieSessionStore("test-name", &AuthSession{
 		Secret:   "secret1234567890",
-		Name:     "%s-name",
 		Path:     "/",
 		Domain:   "example.com",
 		Expiry:   ptrInt(600),
@@ -130,9 +115,8 @@ func TestCookieSessionStore_Create(t *testing.T) {
 }
 
 func TestCookieSessionStore_CreateCanChunkCookies(t *testing.T) {
-	store, err := NewCookieSessionStore("test", &AuthSession{
+	store, err := NewCookieSessionStore("test-name", &AuthSession{
 		Secret:   "secret1234567890",
-		Name:     "%s-name",
 		Path:     "/",
 		Domain:   "example.com",
 		Expiry:   ptrInt(600),
@@ -173,9 +157,8 @@ func TestCookieSessionStore_CreateCanChunkCookies(t *testing.T) {
 }
 
 func TestCookieSessionStore_Update(t *testing.T) {
-	store, err := NewCookieSessionStore("test", &AuthSession{
+	store, err := NewCookieSessionStore("test-name", &AuthSession{
 		Secret:   "secret1234567890",
-		Name:     "%s-name",
 		Path:     "/",
 		Domain:   "example.com",
 		Expiry:   ptrInt(600),
@@ -201,9 +184,8 @@ func TestCookieSessionStore_Update(t *testing.T) {
 }
 
 func TestCookieSessionStore_Get(t *testing.T) {
-	store, err := NewCookieSessionStore("test", &AuthSession{
+	store, err := NewCookieSessionStore("test-name", &AuthSession{
 		Secret: "secret1234567890",
-		Name:   "%s-name",
 	}, RandrMock{}, 200)
 	require.NoError(t, err)
 
@@ -223,9 +205,8 @@ func TestCookieSessionStore_Get(t *testing.T) {
 }
 
 func TestCookieSessionStore_GetHandlesChunkedCookies(t *testing.T) {
-	store, err := NewCookieSessionStore("test", &AuthSession{
+	store, err := NewCookieSessionStore("test-name", &AuthSession{
 		Secret: "secret1234567890",
-		Name:   "%s-name",
 	}, RandrMock{}, 200)
 	require.NoError(t, err)
 
@@ -253,9 +234,8 @@ func TestCookieSessionStore_GetHandlesChunkedCookies(t *testing.T) {
 }
 
 func TestCookieSessionStore_GetReturnsNilIfNoSessionExists(t *testing.T) {
-	store, err := NewCookieSessionStore("test", &AuthSession{
+	store, err := NewCookieSessionStore("test-name", &AuthSession{
 		Secret: "secret1234567890",
-		Name:   "%s-name",
 	}, RandrMock{}, 200)
 	require.NoError(t, err)
 

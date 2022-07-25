@@ -35,7 +35,6 @@ type Config struct {
 
 // AuthStateCookie carries the state cookie configuration.
 type AuthStateCookie struct {
-	Name     string `json:"name,omitempty" toml:"name,omitempty" yaml:"name,omitempty"`
 	Secret   string `json:"secret,omitempty" toml:"secret,omitempty" yaml:"secret,omitempty"`
 	Path     string `json:"path,omitempty" toml:"path,omitempty" yaml:"path,omitempty"`
 	Domain   string `json:"domain,omitempty" toml:"domain,omitempty" yaml:"domain,omitempty"`
@@ -49,7 +48,6 @@ type AuthStateCookie struct {
 type AuthSession struct {
 	Store    string `json:"store,omitempty" toml:"store,omitempty" yaml:"store,omitempty"`
 	Secret   string `json:"secret,omitempty" toml:"secret,omitempty" yaml:"secret,omitempty"`
-	Name     string `json:"name,omitempty" toml:"name,omitempty" yaml:"name,omitempty"`
 	Path     string `json:"path,omitempty" toml:"path,omitempty" yaml:"path,omitempty"`
 	Domain   string `json:"domain,omitempty" toml:"domain,omitempty" yaml:"domain,omitempty"`
 	Expiry   *int   `json:"expiry,omitempty" toml:"expiry,omitempty" yaml:"expiry,omitempty"`
@@ -60,30 +58,6 @@ type AuthSession struct {
 	Sliding  *bool  `json:"sliding,omitempty" toml:"sliding,omitempty" yaml:"sliding,omitempty"`
 }
 
-// DefaultDynamicConfig returns a dynamic configuration with default values.
-func DefaultDynamicConfig() Config {
-	return Config{
-		Scopes: []string{"openid"},
-		StateCookie: &AuthStateCookie{
-			Name:     "%s-state",
-			MaxAge:   ptrInt(600),
-			Path:     "/",
-			HTTPOnly: ptrBool(true),
-			SameSite: "lax",
-		},
-		Session: &AuthSession{
-			Name:     "%s-session",
-			Secret:   "123456789abcdefh",
-			Expiry:   ptrInt(86400),
-			Path:     "/",
-			HTTPOnly: ptrBool(true),
-			SameSite: "lax",
-			Refresh:  ptrBool(true),
-			Sliding:  ptrBool(true),
-		},
-	}
-}
-
 // ApplyDefaultValues applies default values on the given dynamic configuration.
 func ApplyDefaultValues(cfg *Config) {
 	if len(cfg.Scopes) == 0 {
@@ -92,10 +66,6 @@ func ApplyDefaultValues(cfg *Config) {
 
 	if cfg.StateCookie == nil {
 		cfg.StateCookie = &AuthStateCookie{}
-	}
-
-	if cfg.StateCookie.Name == "" {
-		cfg.StateCookie.Name = "%s-state"
 	}
 
 	if cfg.StateCookie.MaxAge == nil {
@@ -116,10 +86,6 @@ func ApplyDefaultValues(cfg *Config) {
 
 	if cfg.Session == nil {
 		cfg.Session = &AuthSession{}
-	}
-
-	if cfg.Session.Name == "" {
-		cfg.Session.Name = "%s-session"
 	}
 
 	if cfg.Session.Expiry == nil {
@@ -149,6 +115,10 @@ func ApplyDefaultValues(cfg *Config) {
 
 func (cfg *Config) Validate() error {
 	ApplyDefaultValues(cfg)
+
+	if cfg.Name == "" {
+		return errors.New("missing name")
+	}
 
 	if cfg.Issuer == "" {
 		return errors.New("missing issuer")
@@ -185,14 +155,6 @@ func (cfg *Config) Validate() error {
 		break
 	default:
 		return errors.New("state secret must be 16, 24 or 32 characters long")
-	}
-
-	if !isValidCookieName(resolveCookieName(cfg.Session.Name, cfg.Name)) {
-		return errors.New("invalid session name")
-	}
-
-	if !isValidCookieName(resolveCookieName(cfg.StateCookie.Name, cfg.Name)) {
-		return errors.New("invalid state cookie name")
 	}
 
 	if cfg.RedirectURL == "" {
