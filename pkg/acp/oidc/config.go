@@ -15,16 +15,12 @@ type Config struct {
 	ClientID     string `json:"clientId,omitempty"  toml:"clientId,omitempty" yaml:"clientId,omitempty"`
 	ClientSecret string `json:"clientSecret,omitempty"  toml:"clientSecret,omitempty" yaml:"clientSecret,omitempty"`
 
-	RedirectURL           string            `json:"redirectUrl,omitempty"  toml:"redirectUrl,omitempty" yaml:"redirectUrl,omitempty"`
-	LoginURL              string            `json:"loginUrl,omitempty"  toml:"loginUrl,omitempty" yaml:"loginUrl,omitempty"`
-	LogoutURL             string            `json:"logoutUrl,omitempty"  toml:"logoutUrl,omitempty" yaml:"logoutUrl,omitempty"`
-	PostLoginRedirectURL  string            `json:"postLoginRedirectUrl,omitempty"  toml:"postLoginRedirectUrl,omitempty" yaml:"postLoginRedirectUrl,omitempty"`
-	PostLogoutRedirectURL string            `json:"postLogoutRedirectUrl,omitempty"  toml:"postLogoutRedirectUrl,omitempty" yaml:"postLogoutRedirectUrl,omitempty"`
-	DisableLogin          bool              `json:"disableLogin,omitempty"  toml:"disableLogin,omitempty" yaml:"disableLogin,omitempty"`
-	Scopes                []string          `json:"scopes,omitempty" toml:"scopes,omitempty" yaml:"scopes,omitempty"`
-	AuthParams            map[string]string `json:"authParams,omitempty" toml:"authParams,omitempty" yaml:"authParams,omitempty"`
-	StateCookie           *AuthStateCookie  `json:"stateCookie,omitempty" toml:"stateCookie,omitempty" yaml:"stateCookie,omitempty"`
-	Session               *AuthSession      `json:"session,omitempty" toml:"session,omitempty" yaml:"session,omitempty"`
+	RedirectURL string            `json:"redirectUrl,omitempty"  toml:"redirectUrl,omitempty" yaml:"redirectUrl,omitempty"`
+	LogoutURL   string            `json:"logoutUrl,omitempty"  toml:"logoutUrl,omitempty" yaml:"logoutUrl,omitempty"`
+	Scopes      []string          `json:"scopes,omitempty" toml:"scopes,omitempty" yaml:"scopes,omitempty"`
+	AuthParams  map[string]string `json:"authParams,omitempty" toml:"authParams,omitempty" yaml:"authParams,omitempty"`
+	StateCookie *AuthStateCookie  `json:"stateCookie,omitempty" toml:"stateCookie,omitempty" yaml:"stateCookie,omitempty"`
+	Session     *AuthSession      `json:"session,omitempty" toml:"session,omitempty" yaml:"session,omitempty"`
 
 	// ForwardHeaders defines headers that should be added to the request and populated with values extracted from the ID token.
 	ForwardHeaders map[string]string `json:"forwardHeaders,omitempty" toml:"forwardHeaders,omitempty" yaml:"forwardHeaders,omitempty"`
@@ -38,24 +34,18 @@ type AuthStateCookie struct {
 	Secret   string `json:"secret,omitempty" toml:"secret,omitempty" yaml:"secret,omitempty"`
 	Path     string `json:"path,omitempty" toml:"path,omitempty" yaml:"path,omitempty"`
 	Domain   string `json:"domain,omitempty" toml:"domain,omitempty" yaml:"domain,omitempty"`
-	MaxAge   *int   `json:"maxAge,omitempty" toml:"maxAge,omitempty" yaml:"maxAge,omitempty"`
 	SameSite string `json:"sameSite,omitempty" toml:"sameSite,omitempty" yaml:"sameSite,omitempty"`
-	HTTPOnly *bool  `json:"httpOnly,omitempty" toml:"httpOnly,omitempty" yaml:"httpOnly,omitempty"`
 	Secure   bool   `json:"secure,omitempty" toml:"secure,omitempty" yaml:"secure,omitempty"`
 }
 
 // AuthSession carries session and session cookie configuration.
 type AuthSession struct {
-	Store    string `json:"store,omitempty" toml:"store,omitempty" yaml:"store,omitempty"`
 	Secret   string `json:"secret,omitempty" toml:"secret,omitempty" yaml:"secret,omitempty"`
 	Path     string `json:"path,omitempty" toml:"path,omitempty" yaml:"path,omitempty"`
 	Domain   string `json:"domain,omitempty" toml:"domain,omitempty" yaml:"domain,omitempty"`
-	Expiry   *int   `json:"expiry,omitempty" toml:"expiry,omitempty" yaml:"expiry,omitempty"`
 	SameSite string `json:"sameSite,omitempty" toml:"sameSite,omitempty" yaml:"sameSite,omitempty"`
-	HTTPOnly *bool  `json:"httpOnly,omitempty" toml:"httpOnly,omitempty" yaml:"httpOnly,omitempty"`
 	Secure   bool   `json:"secure,omitempty" toml:"secure,omitempty" yaml:"secure,omitempty"`
 	Refresh  *bool  `json:"refresh,omitempty" toml:"refresh,omitempty" yaml:"refresh,omitempty"`
-	Sliding  *bool  `json:"sliding,omitempty" toml:"sliding,omitempty" yaml:"sliding,omitempty"`
 }
 
 // ApplyDefaultValues applies default values on the given dynamic configuration.
@@ -68,16 +58,8 @@ func ApplyDefaultValues(cfg *Config) {
 		cfg.StateCookie = &AuthStateCookie{}
 	}
 
-	if cfg.StateCookie.MaxAge == nil {
-		cfg.StateCookie.MaxAge = ptrInt(600)
-	}
-
 	if cfg.StateCookie.Path == "" {
 		cfg.StateCookie.Path = "/"
-	}
-
-	if cfg.StateCookie.HTTPOnly == nil {
-		cfg.StateCookie.HTTPOnly = ptrBool(true)
 	}
 
 	if cfg.StateCookie.SameSite == "" {
@@ -88,16 +70,8 @@ func ApplyDefaultValues(cfg *Config) {
 		cfg.Session = &AuthSession{}
 	}
 
-	if cfg.Session.Expiry == nil {
-		cfg.Session.Expiry = ptrInt(86400)
-	}
-
 	if cfg.Session.Path == "" {
 		cfg.Session.Path = "/"
-	}
-
-	if cfg.Session.HTTPOnly == nil {
-		cfg.Session.HTTPOnly = ptrBool(true)
 	}
 
 	if cfg.Session.SameSite == "" {
@@ -106,10 +80,6 @@ func ApplyDefaultValues(cfg *Config) {
 
 	if cfg.Session.Refresh == nil {
 		cfg.Session.Refresh = ptrBool(true)
-	}
-
-	if cfg.Session.Sliding == nil {
-		cfg.Session.Sliding = ptrBool(true)
 	}
 }
 
@@ -141,10 +111,6 @@ func (cfg *Config) Validate() error {
 		break
 	default:
 		return errors.New("session secret must be 16, 24 or 32 characters long")
-	}
-
-	if *cfg.Session.Expiry <= 0 {
-		return errors.New("session expiry must be a non-zero positive value")
 	}
 
 	if cfg.StateCookie.Secret == "" {

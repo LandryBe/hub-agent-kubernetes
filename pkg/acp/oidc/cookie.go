@@ -58,8 +58,8 @@ func (s *CookieSessionStore) Create(w http.ResponseWriter, data SessionData) err
 			Value:    string(value),
 			Path:     s.cfg.Path,
 			Domain:   s.cfg.Domain,
-			MaxAge:   *s.cfg.Expiry,
-			HttpOnly: *s.cfg.HTTPOnly,
+			MaxAge:   86400,
+			HttpOnly: true,
 			SameSite: parseSameSite(s.cfg.SameSite),
 			Secure:   s.cfg.Secure,
 		})
@@ -74,8 +74,8 @@ func (s *CookieSessionStore) Create(w http.ResponseWriter, data SessionData) err
 			Value:    string(val),
 			Path:     s.cfg.Path,
 			Domain:   s.cfg.Domain,
-			MaxAge:   *s.cfg.Expiry,
-			HttpOnly: *s.cfg.HTTPOnly,
+			MaxAge:   86400,
+			HttpOnly: true,
 			SameSite: parseSameSite(s.cfg.SameSite),
 			Secure:   s.cfg.Secure,
 		})

@@ -87,11 +87,12 @@ type AccessControlPolicyBasicAuth struct {
 
 // AccessControlOIDC holds the OIDC authentication configuration.
 type AccessControlOIDC struct {
-	Issuer       string `json:"issuer,omitempty"  toml:"issuer,omitempty" yaml:"issuer,omitempty"`
-	ClientID     string `json:"clientId,omitempty"  toml:"clientId,omitempty" yaml:"clientId,omitempty"`
-	ClientSecret string `json:"clientSecret,omitempty"  toml:"clientSecret,omitempty" yaml:"clientSecret,omitempty"`
-	RedirectURL  string `json:"redirectUrl,omitempty"  toml:"redirectUrl,omitempty" yaml:"redirectUrl,omitempty"`
-	LogoutURL    string `json:"logoutUrl,omitempty" toml:"logoutUrl,omitempty" yaml:"logoutUrl,omitempty"`
+	Issuer       string            `json:"issuer,omitempty"  toml:"issuer,omitempty" yaml:"issuer,omitempty"`
+	ClientID     string            `json:"clientId,omitempty"  toml:"clientId,omitempty" yaml:"clientId,omitempty"`
+	ClientSecret string            `json:"clientSecret,omitempty"  toml:"clientSecret,omitempty" yaml:"clientSecret,omitempty"`
+	RedirectURL  string            `json:"redirectUrl,omitempty"  toml:"redirectUrl,omitempty" yaml:"redirectUrl,omitempty"`
+	LogoutURL    string            `json:"logoutUrl,omitempty" toml:"logoutUrl,omitempty" yaml:"logoutUrl,omitempty"`
+	AuthParams   map[string]string `json:"authParams,omitempty" toml:"authParams,omitempty" yaml:"authParams,omitempty"`
 
 	StateCookie StateCookie `json:"stateCookie" toml:"stateCookie" yaml:"stateCookie"`
 	Session     Session     `json:"session" toml:"session" yaml:"session"`
@@ -105,13 +106,17 @@ type StateCookie struct {
 	Secret   string `json:"secret" toml:"secret" yaml:"secret"`
 	SameSite string `json:"sameSite" toml:"sameSite" yaml:"sameSite"`
 	Secure   bool   `json:"secure" toml:"secure" yaml:"secure"`
+	Domain   string `json:"domain" toml:"domain" yaml:"domain"`
+	Path     string `json:"path" toml:"path" yaml:"path"`
 }
 
 type Session struct {
 	Secret   string `json:"secret" toml:"secret" yaml:"secret"`
 	SameSite string `json:"sameSite" toml:"sameSite" yaml:"sameSite"`
 	Secure   bool   `json:"secure" toml:"secure" yaml:"secure"`
-	Refresh  bool   `json:"refresh" toml:"refresh" yaml:"refresh"`
+	Domain   string `json:"domain" toml:"domain" yaml:"domain"`
+	Path     string `json:"path" toml:"path" yaml:"path"`
+	Refresh  *bool  `json:"refresh,omitempty" toml:"refresh,omitempty" yaml:"refresh,omitempty"`
 }
 
 // AccessControlPolicyStatus is the status of the access control policy.

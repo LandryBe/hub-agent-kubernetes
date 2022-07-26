@@ -14,9 +14,7 @@ func TestCookieSessionStore_Delete(t *testing.T) {
 		Secret:   "secret1234567890",
 		Path:     "/",
 		Domain:   "example.com",
-		Expiry:   ptrInt(600),
 		SameSite: "lax",
-		HTTPOnly: ptrBool(true),
 		Secure:   true,
 	}, RandrMock{}, 200)
 	require.NoError(t, err)
@@ -57,9 +55,7 @@ func TestCookieSessionStore_RemoveCookieOnlyRemovesOurCookie(t *testing.T) {
 		Secret:   "secret1234567890",
 		Path:     "/",
 		Domain:   "example.com",
-		Expiry:   ptrInt(600),
 		SameSite: "lax",
-		HTTPOnly: ptrBool(true),
 		Secure:   true,
 	}, RandrMock{}, 200)
 	require.NoError(t, err)
@@ -92,9 +88,7 @@ func TestCookieSessionStore_Create(t *testing.T) {
 		Secret:   "secret1234567890",
 		Path:     "/",
 		Domain:   "example.com",
-		Expiry:   ptrInt(600),
 		SameSite: "lax",
-		HTTPOnly: ptrBool(true),
 		Secure:   true,
 	}, RandrMock{}, 200)
 	require.NoError(t, err)
@@ -111,7 +105,7 @@ func TestCookieSessionStore_Create(t *testing.T) {
 	if !assert.NoError(t, err) {
 		return
 	}
-	assert.Equal(t, "test-name=AQEBAQEBAQEBAQEBAQEBAQPCeonj6H8bgW-y-xdlkLmaN-_ouVkUUyQPAE3ccSugJPjEn0E6eB61jItErDH-XxhNXvoLnh92YAV1rATcOmBVdxP1Ahk4cwyUfBgI5_9x_42fkm4WB8NnvtMReWKFnYdOTBvPfLO1sh0; Path=/; Domain=example.com; Max-Age=600; HttpOnly; Secure; SameSite=Lax", rec.Header().Get("Set-Cookie"))
+	assert.Equal(t, "test-name=AQEBAQEBAQEBAQEBAQEBAQPCeonj6H8bgW-y-xdlkLmaN-_ouVkUUyQPAE3ccSugJPjEn0E6eB61jItErDH-XxhNXvoLnh92YAV1rATcOmBVdxP1Ahk4cwyUfBgI5_9x_42fkm4WB8NnvtMReWKFnYdOTBvPfLO1sh0; Path=/; Domain=example.com; Max-Age=86400; HttpOnly; Secure; SameSite=Lax", rec.Header().Get("Set-Cookie"))
 }
 
 func TestCookieSessionStore_CreateCanChunkCookies(t *testing.T) {
@@ -119,9 +113,7 @@ func TestCookieSessionStore_CreateCanChunkCookies(t *testing.T) {
 		Secret:   "secret1234567890",
 		Path:     "/",
 		Domain:   "example.com",
-		Expiry:   ptrInt(600),
 		SameSite: "lax",
-		HTTPOnly: ptrBool(true),
 		Secure:   true,
 	}, RandrMock{}, 26)
 	require.NoError(t, err)
@@ -140,18 +132,18 @@ func TestCookieSessionStore_CreateCanChunkCookies(t *testing.T) {
 	}
 
 	want := []string{
-		"test-name-1=AQEBAQEBAQEBAQ; Path=/; Domain=example.com; Max-Age=600; HttpOnly; Secure; SameSite=Lax",
-		"test-name-2=EBAQEBAQPCeonj; Path=/; Domain=example.com; Max-Age=600; HttpOnly; Secure; SameSite=Lax",
-		"test-name-3=6H8bgW-y-xdlkL; Path=/; Domain=example.com; Max-Age=600; HttpOnly; Secure; SameSite=Lax",
-		"test-name-4=maN-_ouVkUUyQP; Path=/; Domain=example.com; Max-Age=600; HttpOnly; Secure; SameSite=Lax",
-		"test-name-5=AE3ccSugJPjEn0; Path=/; Domain=example.com; Max-Age=600; HttpOnly; Secure; SameSite=Lax",
-		"test-name-6=E6eB61jItErDH-; Path=/; Domain=example.com; Max-Age=600; HttpOnly; Secure; SameSite=Lax",
-		"test-name-7=XxhNXvoLnh92YA; Path=/; Domain=example.com; Max-Age=600; HttpOnly; Secure; SameSite=Lax",
-		"test-name-8=V1rATcOmBVdxP1; Path=/; Domain=example.com; Max-Age=600; HttpOnly; Secure; SameSite=Lax",
-		"test-name-9=Ahk4cwyUfBgI5_; Path=/; Domain=example.com; Max-Age=600; HttpOnly; Secure; SameSite=Lax",
-		"test-name-10=9x_42fkm4WB8Nn; Path=/; Domain=example.com; Max-Age=600; HttpOnly; Secure; SameSite=Lax",
-		"test-name-11=vtMReWKFnYdOTB; Path=/; Domain=example.com; Max-Age=600; HttpOnly; Secure; SameSite=Lax",
-		"test-name-12=vPfLO1sh0; Path=/; Domain=example.com; Max-Age=600; HttpOnly; Secure; SameSite=Lax",
+		"test-name-1=AQEBAQEBAQEBAQ; Path=/; Domain=example.com; Max-Age=86400; HttpOnly; Secure; SameSite=Lax",
+		"test-name-2=EBAQEBAQPCeonj; Path=/; Domain=example.com; Max-Age=86400; HttpOnly; Secure; SameSite=Lax",
+		"test-name-3=6H8bgW-y-xdlkL; Path=/; Domain=example.com; Max-Age=86400; HttpOnly; Secure; SameSite=Lax",
+		"test-name-4=maN-_ouVkUUyQP; Path=/; Domain=example.com; Max-Age=86400; HttpOnly; Secure; SameSite=Lax",
+		"test-name-5=AE3ccSugJPjEn0; Path=/; Domain=example.com; Max-Age=86400; HttpOnly; Secure; SameSite=Lax",
+		"test-name-6=E6eB61jItErDH-; Path=/; Domain=example.com; Max-Age=86400; HttpOnly; Secure; SameSite=Lax",
+		"test-name-7=XxhNXvoLnh92YA; Path=/; Domain=example.com; Max-Age=86400; HttpOnly; Secure; SameSite=Lax",
+		"test-name-8=V1rATcOmBVdxP1; Path=/; Domain=example.com; Max-Age=86400; HttpOnly; Secure; SameSite=Lax",
+		"test-name-9=Ahk4cwyUfBgI5_; Path=/; Domain=example.com; Max-Age=86400; HttpOnly; Secure; SameSite=Lax",
+		"test-name-10=9x_42fkm4WB8Nn; Path=/; Domain=example.com; Max-Age=86400; HttpOnly; Secure; SameSite=Lax",
+		"test-name-11=vtMReWKFnYdOTB; Path=/; Domain=example.com; Max-Age=86400; HttpOnly; Secure; SameSite=Lax",
+		"test-name-12=vPfLO1sh0; Path=/; Domain=example.com; Max-Age=86400; HttpOnly; Secure; SameSite=Lax",
 	}
 	assert.Equal(t, want, rec.Header()["Set-Cookie"])
 }
@@ -161,9 +153,7 @@ func TestCookieSessionStore_Update(t *testing.T) {
 		Secret:   "secret1234567890",
 		Path:     "/",
 		Domain:   "example.com",
-		Expiry:   ptrInt(600),
 		SameSite: "lax",
-		HTTPOnly: ptrBool(true),
 		Secure:   true,
 	}, RandrMock{}, 200)
 	require.NoError(t, err)
@@ -180,7 +170,7 @@ func TestCookieSessionStore_Update(t *testing.T) {
 	if !assert.NoError(t, err) {
 		return
 	}
-	assert.Equal(t, "test-name=AQEBAQEBAQEBAQEBAQEBAQPCeonj6H8bgW-y-xdlkLmaN-_ouVkUUyQPAE3ccSugJPjEn0E6eB61jItErDH-XxhNXvoLnh92YAV1rATcOmBVdxP1Ahk4cwyUfBgI5_9x_42fkm4WB8NnvtMReWKFnYdOTBvPfLO1sh0; Path=/; Domain=example.com; Max-Age=600; HttpOnly; Secure; SameSite=Lax", rec.Header().Get("Set-Cookie"))
+	assert.Equal(t, "test-name=AQEBAQEBAQEBAQEBAQEBAQPCeonj6H8bgW-y-xdlkLmaN-_ouVkUUyQPAE3ccSugJPjEn0E6eB61jItErDH-XxhNXvoLnh92YAV1rATcOmBVdxP1Ahk4cwyUfBgI5_9x_42fkm4WB8NnvtMReWKFnYdOTBvPfLO1sh0; Path=/; Domain=example.com; Max-Age=86400; HttpOnly; Secure; SameSite=Lax", rec.Header().Get("Set-Cookie"))
 }
 
 func TestCookieSessionStore_Get(t *testing.T) {

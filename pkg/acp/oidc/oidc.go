@@ -168,7 +168,6 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	// to use it in the OAuth2 and OIDC libraries.
 	l := log.With().Str("handler_type", "OIDC").Str("handler_name", h.name).Logger()
 
-	// TODO : handle delete session
 	logoutURL := resolveURL(req, h.cfg.LogoutURL)
 	forwardedURL := fmt.Sprintf("%s://%s%s", req.Header.Get("X-Forwarded-Proto"), req.Header.Get("X-Forwarded-Host"), req.Header.Get("X-Forwarded-Uri"))
 	forwardedMethod := req.Header.Get("X-Forwarded-Method")
@@ -176,13 +175,6 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	if isURL(forwardedURL, logoutURL) && forwardedMethod == http.MethodDelete {
 		if err := h.session.Delete(rw, req); err != nil {
 			l.Debug().Err(err).Msg("Unable to delete the session")
-		}
-
-		redirectURL := resolveURL(req, h.cfg.PostLogoutRedirectURL)
-		if redirectURL != "" {
-			http.Redirect(rw, req, redirectURL, http.StatusFound)
-
-			return
 		}
 
 		rw.WriteHeader(http.StatusNoContent)
@@ -261,7 +253,7 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if refreshSession || *h.cfg.Session.Sliding {
+	if refreshSession {
 		if err = h.session.Update(rw, req, *sess); err != nil {
 			l.Debug().Err(err).Msg("Unable to refresh the session")
 			http.Error(rw, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -371,28 +363,16 @@ func (h *Handler) redirectToProvider(rw http.ResponseWriter, req *http.Request, 
 		oauth2.SetAuthURLParam("redirect_uri", redirectURL),
 		oidc.Nonce(state.Nonce),
 	}
+
 	if *h.cfg.Session.Refresh {
 		// We want a refresh token in the response, which requires AccessTypeOffline,
 		// which in turn requires consent prompt.
 		// spec: section 11.
 		opts = append(opts, oauth2.AccessTypeOffline)
-
-		// As requested by Merckgroup, we allow the use of Offline Access without a prompt parameter,
-		// even though it is not compliant with the spec. In order to do so,
-		// if the prompt parameter is specifically set to empty in the AuthParams,
-		// we do not add the prompt parameter to the auth URL.
-		value, exists := h.cfg.AuthParams["prompt"]
-		if !exists {
-			value = "consent"
-		}
-		if value != "" {
-			opts = append(opts, oauth2.SetAuthURLParam("prompt", value))
-		}
+		opts = append(opts, oauth2.SetAuthURLParam("prompt", "consent"))
 	}
+
 	for k, v := range h.cfg.AuthParams {
-		if k == "prompt" {
-			continue
-		}
 		opts = append(opts, oauth2.SetAuthURLParam(k, v))
 	}
 
@@ -488,17 +468,6 @@ func (h *Handler) handleProviderCallback(rw http.ResponseWriter, req *http.Reque
 	}
 	h.clearStateCookie(rw)
 
-	if resolveURL(req, h.cfg.LoginURL) == resolveURL(req, state.OriginURL) {
-		u := resolveURL(req, h.cfg.PostLoginRedirectURL)
-		if u != "" {
-			http.Redirect(rw, req, u, http.StatusFound)
-			return
-		}
-
-		rw.WriteHeader(http.StatusNoContent)
-		return
-	}
-
 	// 8th step of diagram.
 	http.Redirect(rw, req, state.OriginURL, http.StatusFound)
 }
@@ -544,8 +513,8 @@ func (h *Handler) newStateCookie(state StateData) (*http.Cookie, error) {
 		Name:     h.name + "-state",
 		Value:    base64.RawURLEncoding.EncodeToString(encrypted),
 		Path:     h.cfg.StateCookie.Path,
-		MaxAge:   *h.cfg.StateCookie.MaxAge,
-		HttpOnly: *h.cfg.StateCookie.HTTPOnly,
+		MaxAge:   600,
+		HttpOnly: true,
 		SameSite: parseSameSite(h.cfg.StateCookie.SameSite),
 		Secure:   h.cfg.StateCookie.Secure,
 		Domain:   h.cfg.StateCookie.Domain,
@@ -563,32 +532,15 @@ func (h *Handler) clearStateCookie(w http.ResponseWriter) {
 
 func (h *Handler) shouldRedirect(req *http.Request) bool {
 	forwardedMethod := req.Header.Get("X-Forwarded-Method")
-
 	if forwardedMethod == http.MethodPost ||
 		forwardedMethod == http.MethodDelete ||
 		forwardedMethod == http.MethodPatch ||
 		forwardedMethod == http.MethodPut {
 		return false
 	}
+
 	// The favicon seems to do bad things, ban it.
-	if strings.Contains(req.Header.Get("X-Forwarded-Uri"), "favicon.ico") {
-		return false
-	}
-
-	// The DisableLogin option disables redirects.
-	if h.cfg.DisableLogin {
-		return false
-	}
-
-	forwardedURL := fmt.Sprintf("%s://%s%s", req.Header.Get("X-Forwarded-Proto"), req.Header.Get("X-Forwarded-Host"), req.Header.Get("X-Forwarded-Uri"))
-
-	// If set, the login url is the only page that can redirect.
-	loginURL := resolveURL(req, h.cfg.LoginURL)
-	if loginURL != "" && !isURL(forwardedURL, loginURL) {
-		return false
-	}
-
-	return true
+	return !strings.Contains(req.Header.Get("X-Forwarded-Uri"), "favicon.ico")
 }
 
 func resolveURL(r *http.Request, u string) string {
@@ -611,20 +563,6 @@ func resolveURL(r *http.Request, u string) string {
 
 	return scheme + "://" + u
 }
-
-// isURL checks whether a request's URL is the same as a given, potentially
-// incomplete, URL. If the given URL is incomplete, resolve it before the
-// comparison.
-//func isURL(r *http.Request, otherURL string) bool {
-//	u, err := url.Parse(otherURL)
-//	if err != nil {
-//		return false
-//	}
-//
-//	log.Debug().Msg("isURL: " + r.Host + "*" + u.Host + "*" + r.URL.Path + "*" + u.Path)
-//
-//	return r.Host == u.Host && r.URL.Path == u.Path
-//}
 
 func isURL(originalURL, otherURL string) bool {
 	oURL, err := url.Parse(originalURL)
