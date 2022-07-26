@@ -134,15 +134,8 @@ func ptrBool(v bool) *bool {
 	return &v
 }
 
-// ptrInt returns a pointer to int.
-func ptrInt(v int) *int {
-	return &v
-}
-
 // Provider returns a provider instance from given auth source.
 func BuildProvider(ctx context.Context, cfg *Config) (*oidc.Provider, error) {
-	// TODO handle discovery param
-
 	provider, err := oidc.NewProvider(ctx, cfg.Issuer)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create provider: %w", err)

@@ -104,18 +104,18 @@ type AccessControlOIDC struct {
 
 type StateCookie struct {
 	Secret   string `json:"secret" toml:"secret" yaml:"secret"`
-	SameSite string `json:"sameSite" toml:"sameSite" yaml:"sameSite"`
-	Secure   bool   `json:"secure" toml:"secure" yaml:"secure"`
-	Domain   string `json:"domain" toml:"domain" yaml:"domain"`
-	Path     string `json:"path" toml:"path" yaml:"path"`
+	SameSite string `json:"sameSite,omitempty" toml:"sameSite,omitempty" yaml:"sameSite,omitempty"`
+	Secure   bool   `json:"secure,omitempty" toml:"secure,omitempty" yaml:"secure,omitempty"`
+	Domain   string `json:"domain,omitempty" toml:"domain,omitempty" yaml:"domain,omitempty"`
+	Path     string `json:"path,omitempty" toml:"path,omitempty" yaml:"path,omitempty"`
 }
 
 type Session struct {
 	Secret   string `json:"secret" toml:"secret" yaml:"secret"`
-	SameSite string `json:"sameSite" toml:"sameSite" yaml:"sameSite"`
-	Secure   bool   `json:"secure" toml:"secure" yaml:"secure"`
-	Domain   string `json:"domain" toml:"domain" yaml:"domain"`
-	Path     string `json:"path" toml:"path" yaml:"path"`
+	SameSite string `json:"sameSite,omitempty" toml:"sameSite,omitempty" yaml:"sameSite,omitempty"`
+	Secure   bool   `json:"secure,omitempty" toml:"secure,omitempty" yaml:"secure,omitempty"`
+	Domain   string `json:"domain,omitempty" toml:"domain,omitempty" yaml:"domain,omitempty"`
+	Path     string `json:"path,omitempty" toml:"path,omitempty" yaml:"path,omitempty"`
 	Refresh  *bool  `json:"refresh,omitempty" toml:"refresh,omitempty" yaml:"refresh,omitempty"`
 }
 
