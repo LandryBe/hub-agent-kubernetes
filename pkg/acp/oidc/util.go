@@ -1,13 +1,10 @@
 package oidc
 
 import (
-	"fmt"
 	"math/rand"
 	"net/http"
 	"strings"
 	"time"
-
-	"golang.org/x/net/http/httpguts"
 )
 
 func getCookie(r *http.Request, name string) ([]byte, bool) {
@@ -46,21 +43,6 @@ func parseSameSite(raw string) http.SameSite {
 	default:
 		return http.SameSiteDefaultMode
 	}
-}
-
-func resolveCookieName(name, src string) string {
-	if strings.Count(name, "%s") == 1 {
-		return fmt.Sprintf(name, src)
-	}
-	return name
-}
-
-func isValidCookieName(name string) bool {
-	return strings.IndexFunc(name, isNotToken) < 0
-}
-
-func isNotToken(r rune) bool {
-	return !httpguts.IsTokenRune(r)
 }
 
 type random struct {

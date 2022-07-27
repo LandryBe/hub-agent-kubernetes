@@ -6,7 +6,6 @@ import (
 	"time"
 )
 
-//TODO add TLS configuration.
 func newHTTPClient() *http.Client {
 	return &http.Client{
 		Transport: &http.Transport{

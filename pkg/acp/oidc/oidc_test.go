@@ -1,7 +1,7 @@
 package oidc
 
 //
-//import (
+// import (
 //	"context"
 //	"crypto/tls"
 //	"encoding/base64"
@@ -22,7 +22,7 @@ package oidc
 //	"golang.org/x/oauth2"
 //)
 //
-//func TestNewMiddlewareFromSource_ValidatesConfiguration(t *testing.T) {
+// func TestNewMiddlewareFromSource_ValidatesConfiguration(t *testing.T) {
 //	tests := []struct {
 //		name    string
 //		name     *auth.OIDCConfig
@@ -197,12 +197,12 @@ package oidc
 //	}
 //}
 //
-//func TestNewMiddlewareFromSource_SelfSignedIssuer(t *testing.T) {
+// func TestNewMiddlewareFromSource_SelfSignedIssuer(t *testing.T) {
 //	certPem := []byte(`-----BEGIN CERTIFICATE-----
-//MIIB/DCCAaGgAwIBAgIRAK5Wtyw1YesDMV3koA8fJsswCgYIKoZIzj0EAwIwLDET
-//MBEGA1UEChMKQ29udGFpbm91czEVMBMGA1UEAxMMVHJhZWZpa0VFIENBMCAXDTE5
-//MTIwNDA2NTIwMloYDzIxMTkxMTEwMDY1MjAyWjAWMRQwEgYDVQQDEwtzZXJ2ZXIu
-//dGVzdDBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABLE9Ao3QpZNz5DzEnYHxz/Ot
+// MIIB/DCCAaGgAwIBAgIRAK5Wtyw1YesDMV3koA8fJsswCgYIKoZIzj0EAwIwLDET
+// MBEGA1UEChMKQ29udGFpbm91czEVMBMGA1UEAxMMVHJhZWZpa0VFIENBMCAXDTE5
+// MTIwNDA2NTIwMloYDzIxMTkxMTEwMDY1MjAyWjAWMRQwEgYDVQQDEwtzZXJ2ZXIu
+// dGVzdDBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABLE9Ao3QpZNz5DzEnYHxz/Ot
 //3xyBNRoFndrF5FrcpyLFg/Zi4tl82abnlr+eSN4kStD8lxFU5dEq79cJljDHQzaj
 //gbcwgbQwDgYDVR0PAQH/BAQDAgGGMBMGA1UdJQQMMAoGCCsGAQUFBwMBMAwGA1Ud
 //EwEB/wQCMAAwKQYDVR0OBCIEIFy7RoCVcFDDZ3gtoPfrAcsUBw3HS6hSw7RiiCGF

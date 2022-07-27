@@ -102,6 +102,7 @@ type AccessControlOIDC struct {
 	Claims         string            `json:"claims,omitempty" toml:"claims,omitempty" yaml:"claims,omitempty"`
 }
 
+// StateCookie holds state cookie configuration.
 type StateCookie struct {
 	Secret   string `json:"secret" toml:"secret" yaml:"secret"`
 	SameSite string `json:"sameSite,omitempty" toml:"sameSite,omitempty" yaml:"sameSite,omitempty"`
@@ -110,6 +111,7 @@ type StateCookie struct {
 	Path     string `json:"path,omitempty" toml:"path,omitempty" yaml:"path,omitempty"`
 }
 
+// Session holds session configuration.
 type Session struct {
 	Secret   string `json:"secret" toml:"secret" yaml:"secret"`
 	SameSite string `json:"sameSite,omitempty" toml:"sameSite,omitempty" yaml:"sameSite,omitempty"`

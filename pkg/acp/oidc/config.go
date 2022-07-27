@@ -83,6 +83,7 @@ func ApplyDefaultValues(cfg *Config) {
 	}
 }
 
+// Validate validates configuration.
 func (cfg *Config) Validate() error {
 	ApplyDefaultValues(cfg)
 
@@ -134,7 +135,7 @@ func ptrBool(v bool) *bool {
 	return &v
 }
 
-// Provider returns a provider instance from given auth source.
+// BuildProvider returns a provider instance from given auth source.
 func BuildProvider(ctx context.Context, cfg *Config) (*oidc.Provider, error) {
 	provider, err := oidc.NewProvider(ctx, cfg.Issuer)
 	if err != nil {

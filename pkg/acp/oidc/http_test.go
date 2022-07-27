@@ -1,7 +1,7 @@
 package oidc
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -20,20 +20,17 @@ func Test_newHTTPClient_WithProxyEnvVars(t *testing.T) {
 
 	os.Clearenv()
 
-	err := os.Setenv("HTTP_PROXY", testProxyServer.URL)
-	require.NoError(t, err)
+	t.Setenv("HTTP_PROXY", testProxyServer.URL)
 
-	defer os.Unsetenv("HTTP_PROXY")
+	defer func() { _ = os.Unsetenv("HTTP_PROXY") }()
 
 	client := newHTTPClient()
-	require.NoError(t, err)
-
 	resp, err := client.Get("http://foo.bar")
 	require.NoError(t, err)
 
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	require.NoError(t, err)
 
 	assert.Equal(t, []byte(`PROXIED`), body)

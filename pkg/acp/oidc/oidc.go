@@ -368,8 +368,7 @@ func (h *Handler) redirectToProvider(rw http.ResponseWriter, req *http.Request, 
 		// We want a refresh token in the response, which requires AccessTypeOffline,
 		// which in turn requires consent prompt.
 		// spec: section 11.
-		opts = append(opts, oauth2.AccessTypeOffline)
-		opts = append(opts, oauth2.SetAuthURLParam("prompt", "consent"))
+		opts = append(opts, oauth2.AccessTypeOffline, oauth2.SetAuthURLParam("prompt", "consent"))
 	}
 
 	for k, v := range h.cfg.AuthParams {
