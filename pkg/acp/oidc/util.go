@@ -18,10 +18,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 package oidc
 
 import (
-	"math/rand"
+	"crypto/rand"
+	"math/big"
 	"net/http"
 	"strings"
-	"time"
 )
 
 func getCookie(r *http.Request, name string) ([]byte, bool) {
@@ -63,22 +63,21 @@ func parseSameSite(raw string) http.SameSite {
 }
 
 type random struct {
-	rand    *rand.Rand
 	charset string
 }
 
-// TODO: revisit, maybe use crypto/rand?
 func newRandom() random {
 	return random{
-		rand:    rand.New(rand.NewSource(time.Now().UnixNano())),
 		charset: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
 	}
 }
 
 func (r random) Bytes(n int) []byte {
 	b := make([]byte, n)
+	max := big.NewInt(int64(len(r.charset)))
 	for i := range b {
-		b[i] = r.charset[r.rand.Intn(len(r.charset))]
+		n, _ := rand.Int(rand.Reader, max)
+		b[i] = r.charset[n.Int64()]
 	}
 	return b
 }
