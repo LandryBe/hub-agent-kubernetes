@@ -1,3 +1,20 @@
+/*
+Copyright (C) 2022 Traefik Labs
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+*/
+
 package oidc
 
 //
@@ -203,20 +220,20 @@ package oidc
 // MBEGA1UEChMKQ29udGFpbm91czEVMBMGA1UEAxMMVHJhZWZpa0VFIENBMCAXDTE5
 // MTIwNDA2NTIwMloYDzIxMTkxMTEwMDY1MjAyWjAWMRQwEgYDVQQDEwtzZXJ2ZXIu
 // dGVzdDBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABLE9Ao3QpZNz5DzEnYHxz/Ot
-//3xyBNRoFndrF5FrcpyLFg/Zi4tl82abnlr+eSN4kStD8lxFU5dEq79cJljDHQzaj
-//gbcwgbQwDgYDVR0PAQH/BAQDAgGGMBMGA1UdJQQMMAoGCCsGAQUFBwMBMAwGA1Ud
-//EwEB/wQCMAAwKQYDVR0OBCIEIFy7RoCVcFDDZ3gtoPfrAcsUBw3HS6hSw7RiiCGF
-//Xkm+MCsGA1UdIwQkMCKAIPOHvhXw6cD5Kx9NdmEwmGCGdWCH1lI75OVP9/Qqvpdm
-//MCcGA1UdEQQgMB6CC3NlcnZlci50ZXN0gglsb2NhbGhvc3SHBH8AAAEwCgYIKoZI
-//zj0EAwIDSQAwRgIhAOnI/7c0cv0QakZ7c/e8ijCNH5sG/2p4JbtsEDadlNvgAiEA
-//wFlfYEb6TyjHQfXIZecpdKdmuB8Jm4SZIkDrFH1SlEw=
-//-----END CERTIFICATE-----`)
+// 3xyBNRoFndrF5FrcpyLFg/Zi4tl82abnlr+eSN4kStD8lxFU5dEq79cJljDHQzaj
+// gbcwgbQwDgYDVR0PAQH/BAQDAgGGMBMGA1UdJQQMMAoGCCsGAQUFBwMBMAwGA1Ud
+// EwEB/wQCMAAwKQYDVR0OBCIEIFy7RoCVcFDDZ3gtoPfrAcsUBw3HS6hSw7RiiCGF
+// Xkm+MCsGA1UdIwQkMCKAIPOHvhXw6cD5Kx9NdmEwmGCGdWCH1lI75OVP9/Qqvpdm
+// MCcGA1UdEQQgMB6CC3NlcnZlci50ZXN0gglsb2NhbGhvc3SHBH8AAAEwCgYIKoZI
+// zj0EAwIDSQAwRgIhAOnI/7c0cv0QakZ7c/e8ijCNH5sG/2p4JbtsEDadlNvgAiEA
+// wFlfYEb6TyjHQfXIZecpdKdmuB8Jm4SZIkDrFH1SlEw=
+// -----END CERTIFICATE-----`)
 //
 //	keyPem := []byte(`-----BEGIN EC PRIVATE KEY-----
-//MHcCAQEEIEf/bAjKUPuGEon0LU66l1Hk57SnZp2kA42cioePzzsdoAoGCCqGSM49
-//AwEHoUQDQgAEsT0CjdClk3PkPMSdgfHP863fHIE1GgWd2sXkWtynIsWD9mLi2XzZ
-//pueWv55I3iRK0PyXEVTl0Srv1wmWMMdDNg==
-//-----END EC PRIVATE KEY-----`)
+// MHcCAQEEIEf/bAjKUPuGEon0LU66l1Hk57SnZp2kA42cioePzzsdoAoGCCqGSM49
+// AwEHoUQDQgAEsT0CjdClk3PkPMSdgfHP863fHIE1GgWd2sXkWtynIsWD9mLi2XzZ
+// pueWv55I3iRK0PyXEVTl0Srv1wmWMMdDNg==
+// -----END EC PRIVATE KEY-----`)
 //
 //	srv := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 //		require.Equal(t, "/.well-known/openid-configuration", r.RequestURI)
@@ -252,9 +269,9 @@ package oidc
 //
 //	_, err = NewHandler(context.Background(), nil, name, cfg, &sessionManagerMock{}, "oidc")
 //	require.NoError(t, err)
-//}
+// }
 //
-//func TestMiddleware_RedirectsCorrectly(t *testing.T) {
+// func TestMiddleware_RedirectsCorrectly(t *testing.T) {
 //	tests := []struct {
 //		name    string
 //		request *http.Request
@@ -524,7 +541,7 @@ package oidc
 //	}
 //}
 //
-//func TestMiddleware_ExchangesTokenOnCallback(t *testing.T) {
+// func TestMiddleware_ExchangesTokenOnCallback(t *testing.T) {
 //	next := func(w http.ResponseWriter, r *http.Request) {}
 //	cfg := Config{
 //		RedirectURL: "http://foobar.com/callback",
@@ -608,7 +625,7 @@ package oidc
 //	assert.Equal(t, "test-state=; Path=/; Max-Age=0", w.Header().Get("Set-Cookie"))
 //}
 //
-//func TestMiddleware_ExchangesTokenOnCallbackWithLoginURL(t *testing.T) {
+// func TestMiddleware_ExchangesTokenOnCallbackWithLoginURL(t *testing.T) {
 //	next := func(w http.ResponseWriter, r *http.Request) {}
 //	cfg := Config{
 //		RedirectURL: "http://foobar.com/callback",
@@ -692,7 +709,7 @@ package oidc
 //	assert.Equal(t, "test-state=; Path=/; Max-Age=0", w.Header().Get("Set-Cookie"))
 //}
 //
-//func TestMiddleware_ExchangesTokenOnCallbackWithLoginURLAndRedirect(t *testing.T) {
+// func TestMiddleware_ExchangesTokenOnCallbackWithLoginURLAndRedirect(t *testing.T) {
 //	next := func(w http.ResponseWriter, r *http.Request) {}
 //	cfg := Config{
 //		RedirectURL:          "http://foobar.com/callback",
@@ -778,7 +795,7 @@ package oidc
 //	assert.Equal(t, "test-state=; Path=/; Max-Age=0", w.Header().Get("Set-Cookie"))
 //}
 //
-//func TestMiddleware_ForwardsCorrectly(t *testing.T) {
+// func TestMiddleware_ForwardsCorrectly(t *testing.T) {
 //	tests := []struct {
 //		name    string
 //		cfg     Config
@@ -1017,7 +1034,7 @@ package oidc
 //	}
 //}
 //
-//func TestMiddleware_LogsOutCorrectly(t *testing.T) {
+// func TestMiddleware_LogsOutCorrectly(t *testing.T) {
 //	tests := []struct {
 //		name string
 //
@@ -1072,7 +1089,7 @@ package oidc
 //	}
 //}
 //
-//func TestMiddleware_LogsOutCorrectlyWithRedirect(t *testing.T) {
+// func TestMiddleware_LogsOutCorrectlyWithRedirect(t *testing.T) {
 //	var deleteCount int
 //	session := sessionManagerMock{
 //		deleteFn: func(_ http.ResponseWriter, _ *http.Request) error {
@@ -1108,69 +1125,69 @@ package oidc
 //	assert.Equal(t, 1, deleteCount)
 //}
 //
-//type oauthProviderMock struct {
+// type oauthProviderMock struct {
 //	authCodeURLFn func(string, ...oauth2.AuthCodeOption) string
 //	exchangeFn    func(string, ...oauth2.AuthCodeOption) (*oauth2.Token, error)
 //	tokenSourceFn func(token *oauth2.Token) oauth2.TokenSource
 //}
 //
-//func (p oauthProviderMock) AuthCodeURL(url string, opts ...oauth2.AuthCodeOption) string {
+// func (p oauthProviderMock) AuthCodeURL(url string, opts ...oauth2.AuthCodeOption) string {
 //	return p.authCodeURLFn(url, opts...)
 //}
 //
-//func (p oauthProviderMock) Exchange(_ context.Context, code string, opts ...oauth2.AuthCodeOption) (*oauth2.Token, error) {
+// func (p oauthProviderMock) Exchange(_ context.Context, code string, opts ...oauth2.AuthCodeOption) (*oauth2.Token, error) {
 //	return p.exchangeFn(code, opts...)
 //}
 //
-//func (p oauthProviderMock) TokenSource(_ context.Context, t *oauth2.Token) oauth2.TokenSource {
+// func (p oauthProviderMock) TokenSource(_ context.Context, t *oauth2.Token) oauth2.TokenSource {
 //	return p.tokenSourceFn(t)
 //}
 //
-//type sessionManagerMock struct {
+// type sessionManagerMock struct {
 //	createFn func(http.ResponseWriter, SessionData) error
 //	updateFn func(http.ResponseWriter, *http.Request, SessionData) error
 //	deleteFn func(http.ResponseWriter, *http.Request) error
 //	getFn    func(*http.Request) (*SessionData, error)
 //}
 //
-//func (m sessionManagerMock) Create(w http.ResponseWriter, s SessionData) error {
+// func (m sessionManagerMock) Create(w http.ResponseWriter, s SessionData) error {
 //	return m.createFn(w, s)
 //}
 //
-//func (m sessionManagerMock) Update(w http.ResponseWriter, r *http.Request, s SessionData) error {
+// func (m sessionManagerMock) Update(w http.ResponseWriter, r *http.Request, s SessionData) error {
 //	return m.updateFn(w, r, s)
 //}
 //
-//func (m sessionManagerMock) Delete(w http.ResponseWriter, req *http.Request) error {
+// func (m sessionManagerMock) Delete(w http.ResponseWriter, req *http.Request) error {
 //	return m.deleteFn(w, req)
 //}
 //
-//func (m sessionManagerMock) Get(r *http.Request) (*SessionData, error) {
+// func (m sessionManagerMock) Get(r *http.Request) (*SessionData, error) {
 //	return m.getFn(r)
 //}
 //
-//func (m sessionManagerMock) RemoveCookie(_ *http.Request) {
+// func (m sessionManagerMock) RemoveCookie(_ *http.Request) {
 //	// not needed
 //}
 //
-//type tokenSourceMock struct {
+// type tokenSourceMock struct {
 //	token *oauth2.Token
 //	err   error
 //}
 //
-//func (t tokenSourceMock) Token() (*oauth2.Token, error) {
+// func (t tokenSourceMock) Token() (*oauth2.Token, error) {
 //	return t.token, t.err
 //}
 //
-//type keySetMock func(string) ([]byte, error)
+// type keySetMock func(string) ([]byte, error)
 //
-//func (k keySetMock) VerifySignature(_ context.Context, jwt string) ([]byte, error) {
+// func (k keySetMock) VerifySignature(_ context.Context, jwt string) ([]byte, error) {
 //	return k(jwt)
 //}
 //
-//const jwtToken = `eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhbGljZSIsImlzcyI6Imh0dHBzOi8vb3BlbmlkLmMyaWQuY29tIiwiYXVkIjoiY2xpZW50LTEyMzQ1Iiwibm9uY2UiOiJuLTBTNl9XekEyTWoiLCJhdXRoX3RpbWUiOjEzMTEyODA5NjksImFjciI6ImMyaWQubG9hLmhpc2VjIiwiZ3JvdXAiOiJhZG1pbiIsImlhdCI6MTUxNjIzOTAyMn0.EVA0Ec03xmOfCpJGng8dvMe7OoN6LLUX84f5qL0hircxs03lmZhc2UXu3Ipb6QndtVU5AZBxZkWtvGs2Ls3RuA`
+// const jwtToken = `eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhbGljZSIsImlzcyI6Imh0dHBzOi8vb3BlbmlkLmMyaWQuY29tIiwiYXVkIjoiY2xpZW50LTEyMzQ1Iiwibm9uY2UiOiJuLTBTNl9XekEyTWoiLCJhdXRoX3RpbWUiOjEzMTEyODA5NjksImFjciI6ImMyaWQubG9hLmhpc2VjIiwiZ3JvdXAiOiJhZG1pbiIsImlhdCI6MTUxNjIzOTAyMn0.EVA0Ec03xmOfCpJGng8dvMe7OoN6LLUX84f5qL0hircxs03lmZhc2UXu3Ipb6QndtVU5AZBxZkWtvGs2Ls3RuA`
 //
-//func parseJwt(t *testing.T, raw string) ([]byte, error) {
+// func parseJwt(t *testing.T, raw string) ([]byte, error) {
 //	t.Helper()
 //
 //	sp := strings.Split(raw, ".")
