@@ -297,7 +297,7 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if err = h.forwardHeader(req, claims); err != nil {
+	if err = h.forwardHeader(rw, claims); err != nil {
 		l.Error().Err(err).Msg("Unable to set forwarded header")
 		http.Error(rw, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 
@@ -305,22 +305,21 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	// 10th step of diagram.
-	req.Header.Set("Authorization", "Bearer "+sess.AccessToken)
-	h.session.RemoveCookie(req)
+	rw.Header().Set("Authorization", "Bearer "+sess.AccessToken)
 
 	rw.WriteHeader(http.StatusOK)
 }
 
-func (h *Handler) forwardHeader(r *http.Request, claims map[string]interface{}) error {
+func (h *Handler) forwardHeader(rw http.ResponseWriter, claims map[string]interface{}) error {
 	hdrs, err := expr.PluckClaims(h.cfg.ForwardHeaders, claims)
 	if err != nil {
 		return errors.New("unable to extract data from claims")
 	}
 
 	for name, vals := range hdrs {
-		r.Header.Del(name)
+		rw.Header().Del(name)
 		for _, val := range vals {
-			r.Header.Add(name, val)
+			rw.Header().Add(name, val)
 		}
 	}
 

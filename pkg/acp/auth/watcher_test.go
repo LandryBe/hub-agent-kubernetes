@@ -32,12 +32,29 @@ import (
 	ktypes "k8s.io/apimachinery/pkg/types"
 )
 
+func createPolicy(uid, name string) *hubv1alpha1.AccessControlPolicy {
+	return createPolicyWithSecret(uid, name, "secret")
+}
+
 func createPolicyWithSecret(uid, name, secret string) *hubv1alpha1.AccessControlPolicy {
 	return &hubv1alpha1.AccessControlPolicy{
 		ObjectMeta: metav1.ObjectMeta{UID: ktypes.UID(uid), Name: name},
 		Spec: hubv1alpha1.AccessControlPolicySpec{
 			JWT: &hubv1alpha1.AccessControlPolicyJWT{
 				SigningSecret: secret,
+			},
+		},
+	}
+}
+
+func createOIDCPolicy(uid, name, issuer string, secret *corev1.SecretReference) *hubv1alpha1.AccessControlPolicy {
+	return &hubv1alpha1.AccessControlPolicy{
+		ObjectMeta: metav1.ObjectMeta{UID: ktypes.UID(uid), Name: name},
+		Spec: hubv1alpha1.AccessControlPolicySpec{
+			OIDC: &hubv1alpha1.AccessControlOIDC{
+				Issuer:   issuer,
+				ClientID: "ID",
+				Secret:   secret,
 			},
 		},
 	}
@@ -52,23 +69,6 @@ func createSecret(namespace, name string) *corev1.Secret {
 			"stateCookieKey": []byte("1234567890123456"),
 		},
 	}
-}
-
-func createOIDCPolicyWithSecret(uid, name, issuer string, secret *corev1.SecretReference) *hubv1alpha1.AccessControlPolicy {
-	return &hubv1alpha1.AccessControlPolicy{
-		ObjectMeta: metav1.ObjectMeta{UID: ktypes.UID(uid), Name: name},
-		Spec: hubv1alpha1.AccessControlPolicySpec{
-			OIDC: &hubv1alpha1.AccessControlOIDC{
-				Issuer:   issuer,
-				ClientID: "ID",
-				Secret:   secret,
-			},
-		},
-	}
-}
-
-func createPolicy(uid, name string) *hubv1alpha1.AccessControlPolicy {
-	return createPolicyWithSecret(uid, name, "secret")
 }
 
 func TestWatcher_OnAddOIDC(t *testing.T) {
@@ -91,7 +91,7 @@ func TestWatcher_OnAddOIDC(t *testing.T) {
 	go watcher.Run(ctx)
 
 	// Add oidc without secret
-	watcher.OnAdd(createOIDCPolicyWithSecret("1", "my-oidc", srv.URL, &corev1.SecretReference{Namespace: "ns", Name: "secret"}))
+	watcher.OnAdd(createOIDCPolicy("1", "my-oidc", srv.URL, &corev1.SecretReference{Namespace: "ns", Name: "secret"}))
 
 	time.Sleep(10 * time.Millisecond)
 
