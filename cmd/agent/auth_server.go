@@ -34,6 +34,7 @@ import (
 	"github.com/traefik/hub-agent-kubernetes/pkg/logger"
 	"github.com/traefik/hub-agent-kubernetes/pkg/version"
 	"github.com/urfave/cli/v2"
+	"k8s.io/client-go/informers"
 	clientset "k8s.io/client-go/kubernetes"
 )
 
@@ -82,13 +83,8 @@ func (c authServerCmd) run(cliCtx *cli.Context) error {
 		return fmt.Errorf("create Hub client set: %w", err)
 	}
 
-	kubeClientSet, err := clientset.NewForConfig(config)
-	if err != nil {
-		return fmt.Errorf("create Kube client set: %w", err)
-	}
-
 	switcher := auth.NewHandlerSwitcher()
-	acpWatcher := auth.NewWatcher(switcher, kubeClientSet)
+	acpWatcher := auth.NewWatcher(switcher)
 
 	hubInformer := hubinformer.NewSharedInformerFactory(hubClientSet, 5*time.Minute)
 	hubInformer.Hub().V1alpha1().AccessControlPolicies().Informer().AddEventHandler(acpWatcher)
@@ -97,6 +93,21 @@ func (c authServerCmd) run(cliCtx *cli.Context) error {
 	for t, ok := range hubInformer.WaitForCacheSync(cliCtx.Context.Done()) {
 		if !ok {
 			return fmt.Errorf("wait for cache sync: %s: %w", t, cliCtx.Context.Err())
+		}
+	}
+
+	kubeClientSet, err := clientset.NewForConfig(config)
+	if err != nil {
+		return fmt.Errorf("create Kube client set: %w", err)
+	}
+
+	kubeInformer := informers.NewSharedInformerFactory(kubeClientSet, 5*time.Minute)
+	kubeInformer.Core().V1().Secrets().Informer().AddEventHandler(acpWatcher)
+	kubeInformer.Start(cliCtx.Context.Done())
+
+	for t, ok := range kubeInformer.WaitForCacheSync(cliCtx.Context.Done()) {
+		if !ok {
+			return fmt.Errorf("wait for cache Kubernetes sync: %s: %w", t, cliCtx.Context.Err())
 		}
 	}
 

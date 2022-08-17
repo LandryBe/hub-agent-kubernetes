@@ -18,18 +18,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 package acp
 
 import (
-	"context"
-	"errors"
-	"fmt"
-
-	"github.com/rs/zerolog/log"
 	"github.com/traefik/hub-agent-kubernetes/pkg/acp/basicauth"
 	"github.com/traefik/hub-agent-kubernetes/pkg/acp/jwt"
 	"github.com/traefik/hub-agent-kubernetes/pkg/acp/oidc"
 	hubv1alpha1 "github.com/traefik/hub-agent-kubernetes/pkg/crd/api/hub/v1alpha1"
-	kerror "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	clientset "k8s.io/client-go/kubernetes"
 )
 
 // Config is the configuration of an Access Control Policy. It is used to setup ACP handlers.
@@ -40,7 +32,7 @@ type Config struct {
 }
 
 // ConfigFromPolicy returns an ACP configuration for the given policy.
-func ConfigFromPolicy(policy *hubv1alpha1.AccessControlPolicy, kubeClientset *clientset.Clientset) *Config {
+func ConfigFromPolicy(policy *hubv1alpha1.AccessControlPolicy) *Config {
 	switch {
 	case policy.Spec.JWT != nil:
 		jwtCfg := policy.Spec.JWT
@@ -123,67 +115,8 @@ func ConfigFromPolicy(policy *hubv1alpha1.AccessControlPolicy, kubeClientset *cl
 			}
 		}
 
-		var oidcSecret oidcSecret
-		if oidcCfg.Secret != nil && oidcCfg.Secret.Name != "" && kubeClientset != nil {
-			var err error
-			oidcSecret, err = getOIDCSecret(oidcCfg.Secret.Name, oidcCfg.Secret.Namespace, kubeClientset)
-			if err != nil {
-				log.Error().Err(err).Msg("getOIDCSecret")
-				return &Config{}
-			}
-			conf.OIDC.ClientSecret = oidcSecret.ClientSecret
-
-			if conf.OIDC.StateCookie == nil {
-				conf.OIDC.StateCookie = &oidc.AuthStateCookie{}
-			}
-			conf.OIDC.StateCookie.Secret = oidcSecret.StateCookieKey
-
-			if conf.OIDC.Session == nil {
-				conf.OIDC.Session = &oidc.AuthSession{}
-			}
-			conf.OIDC.Session.Secret = oidcSecret.StateCookieKey
-		}
-
 		return conf
 	default:
 		return &Config{}
 	}
-}
-
-func getOIDCSecret(secretName, namespace string, kubeClientset *clientset.Clientset) (oidcSecret, error) {
-	if namespace == "" {
-		namespace = "default"
-	}
-
-	secret, err := kubeClientset.CoreV1().Secrets(namespace).Get(context.Background(), secretName, metav1.GetOptions{})
-	if err != nil && !kerror.IsNotFound(err) {
-		return oidcSecret{}, fmt.Errorf("get secret: %w", err)
-	}
-
-	clientSecret, ok := secret.Data["clientSecret"]
-	if !ok {
-		return oidcSecret{}, errors.New("missing client secret")
-	}
-
-	sessionKey, ok := secret.Data["sessionKey"]
-	if !ok {
-		return oidcSecret{}, errors.New("missing session key")
-	}
-
-	stateCookieKey, ok := secret.Data["stateCookieKey"]
-	if !ok {
-		return oidcSecret{}, errors.New("missing state cookie key")
-	}
-
-	return oidcSecret{
-		ClientSecret:   string(clientSecret),
-		SessionKey:     string(sessionKey),
-		StateCookieKey: string(stateCookieKey),
-	}, nil
-}
-
-type oidcSecret struct {
-	ClientSecret   string
-	SessionKey     string
-	StateCookieKey string
 }
