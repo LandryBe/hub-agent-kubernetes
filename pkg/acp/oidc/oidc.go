@@ -186,7 +186,7 @@ func NewHandler(ctx context.Context, cfg *Config, name string) (*Handler, error)
 func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	// We add the configured http.Client to the request context,
 	// to use it in the OAuth2 and OIDC libraries.
-	l := log.With().Str("handler_type", "OIDC").Str("handler_name", h.name).Logger()
+	logger := log.With().Str("handler_type", "OIDC").Str("handler_name", h.name).Logger()
 
 	logoutURL := resolveURL(req, h.cfg.LogoutURL)
 	forwardedURL := fmt.Sprintf("%s://%s%s", req.Header.Get("X-Forwarded-Proto"), req.Header.Get("X-Forwarded-Host"), req.Header.Get("X-Forwarded-Uri"))
@@ -194,7 +194,7 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 	if isURL(forwardedURL, logoutURL) && forwardedMethod == http.MethodDelete {
 		if err := h.session.Delete(rw, req); err != nil {
-			l.Debug().Err(err).Msg("Unable to delete the session")
+			logger.Debug().Err(err).Msg("Unable to delete the session")
 		}
 
 		rw.WriteHeader(http.StatusNoContent)
@@ -204,7 +204,7 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 	sess, err := h.session.Get(req)
 	if err != nil {
-		l.Debug().Err(err).Msg("Unable to get the session")
+		logger.Debug().Err(err).Msg("Unable to get the session")
 		http.Error(rw, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 
 		return
@@ -219,7 +219,7 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		redirectURL := resolveURL(req, h.cfg.RedirectURL)
 
 		if isURL(forwardedURL, redirectURL) {
-			l.Debug().Msg("Handle provider callback")
+			logger.Debug().Msg("Handle provider callback")
 			// 5th step of the diagram, we're handling the redirected response from the auth server.
 			// spec: receiving response of section 3.1.2.5
 			h.handleProviderCallback(rw, req, redirectURL)
@@ -228,7 +228,7 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		}
 
 		if !h.shouldRedirect(req) {
-			l.Debug().Msg("Received a request that should not be redirected")
+			logger.Debug().Msg("Received a request that should not be redirected")
 			http.Error(rw, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 
 			return
@@ -243,14 +243,14 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	var refreshSession bool
 	sess, refreshSession, err = h.maybeRefreshSession(req.Context(), sess)
 	if err != nil {
-		l.Debug().Err(err).Msg("Unable to refresh the session")
+		logger.Debug().Err(err).Msg("Unable to refresh the session")
 
 		if err = h.session.Delete(rw, req); err != nil {
-			l.Debug().Err(err).Msg("Unable to delete the session")
+			logger.Debug().Err(err).Msg("Unable to delete the session")
 		}
 
 		if !h.shouldRedirect(req) {
-			l.Debug().Err(err).Msg("Received a request that should not be redirected")
+			logger.Debug().Err(err).Msg("Received a request that should not be redirected")
 			http.Error(rw, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 
 			return
@@ -267,7 +267,7 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	var idToken *oidc.IDToken
 	idToken, err = h.verifier.Verify(req.Context(), sess.IDToken)
 	if err != nil {
-		l.Debug().Err(err).Msg("Invalid ID token")
+		logger.Debug().Err(err).Msg("Invalid ID token")
 		http.Error(rw, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 
 		return
@@ -275,7 +275,7 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 	if refreshSession {
 		if err = h.session.Update(rw, req, *sess); err != nil {
-			l.Debug().Err(err).Msg("Unable to refresh the session")
+			logger.Debug().Err(err).Msg("Unable to refresh the session")
 			http.Error(rw, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 
 			return
@@ -284,21 +284,21 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 	claims := make(map[string]interface{})
 	if err = idToken.Claims(&claims); err != nil {
-		l.Debug().Err(err).Msg("Unable to unmarshal claims")
+		logger.Debug().Err(err).Msg("Unable to unmarshal claims")
 		http.Error(rw, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 
 		return
 	}
 
 	if h.validateClaims != nil && !h.validateClaims(claims) {
-		l.Debug().Err(err).Msg("Unauthorized claim")
+		logger.Debug().Err(err).Msg("Unauthorized claim")
 		http.Error(rw, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 
 		return
 	}
 
 	if err = h.forwardHeader(rw, claims); err != nil {
-		l.Error().Err(err).Msg("Unable to set forwarded header")
+		logger.Error().Err(err).Msg("Unable to set forwarded header")
 		http.Error(rw, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 
 		return
@@ -356,10 +356,10 @@ func (h *Handler) maybeRefreshSession(ctx context.Context, sess *SessionData) (s
 }
 
 func (h *Handler) redirectToProvider(rw http.ResponseWriter, req *http.Request, redirectURL string) {
-	l := log.With().Str("handler_type", "OIDC").Str("handler_name", h.name).Logger()
+	logger := log.With().Str("handler_type", "OIDC").Str("handler_name", h.name).Logger()
 	originalURL := fmt.Sprintf("%s://%s%s", req.Header.Get("X-Forwarded-Proto"), req.Header.Get("X-Forwarded-Host"), req.Header.Get("X-Forwarded-Uri"))
 
-	l.Debug().Msg("Set OriginURL in state: " + originalURL)
+	logger.Debug().Msg("Set OriginURL in state: " + originalURL)
 
 	state := StateData{
 		RedirectID: h.rand.String(20),
@@ -369,13 +369,13 @@ func (h *Handler) redirectToProvider(rw http.ResponseWriter, req *http.Request, 
 
 	stateCookie, err := h.newStateCookie(state)
 	if err != nil {
-		l.Debug().Err(err).Msg("Unable to create state cookie")
+		logger.Debug().Err(err).Msg("Unable to create state cookie")
 		http.Error(rw, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 
 		return
 	}
 
-	l.Debug().Msg("Create State")
+	logger.Debug().Msg("Create State")
 	http.SetCookie(rw, stateCookie)
 
 	opts := []oauth2.AuthCodeOption{
@@ -410,22 +410,22 @@ func (h *Handler) redirectToProvider(rw http.ResponseWriter, req *http.Request, 
 }
 
 func (h *Handler) handleProviderCallback(rw http.ResponseWriter, req *http.Request, redirectURL string) {
-	l := log.With().Str("handler_type", "OIDC").Str("handler_name", h.name).Logger()
+	logger := log.With().Str("handler_type", "OIDC").Str("handler_name", h.name).Logger()
 
 	state, err := h.getStateCookie(req)
 	if err != nil {
-		l.Debug().Err(err).Msg("Malformed state payload")
+		logger.Debug().Err(err).Msg("Malformed state payload")
 		http.Error(rw, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
 
 	u, err := url.Parse(req.Header.Get("X-Forwarded-Uri"))
 	if err != nil {
-		l.Debug().Err(err).Msg("Malformed request ID")
+		logger.Debug().Err(err).Msg("Malformed request ID")
 	}
 
 	if state == nil || u.Query().Get("state") != state.RedirectID {
-		l.Debug().Err(err).Msg("Mismatched request ID or empty state")
+		logger.Debug().Err(err).Msg("Mismatched request ID or empty state")
 		http.Error(rw, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
@@ -442,7 +442,7 @@ func (h *Handler) handleProviderCallback(rw http.ResponseWriter, req *http.Reque
 		opts...,
 	)
 	if err != nil {
-		l.Debug().Err(err).Msg("Unable to exchange code")
+		logger.Debug().Err(err).Msg("Unable to exchange code")
 		http.Error(rw, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
@@ -451,7 +451,7 @@ func (h *Handler) handleProviderCallback(rw http.ResponseWriter, req *http.Reque
 	// spec: section 3.1.3.3.
 	rawIDToken, ok := oauth2Token.Extra("id_token").(string)
 	if !ok {
-		l.Debug().Err(err).Msg("ID token invalid or not found")
+		logger.Debug().Err(err).Msg("ID token invalid or not found")
 		http.Error(rw, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
@@ -459,14 +459,14 @@ func (h *Handler) handleProviderCallback(rw http.ResponseWriter, req *http.Reque
 	// spec: 3.1.3.7
 	idToken, err := h.verifier.Verify(req.Context(), rawIDToken)
 	if err != nil {
-		l.Debug().Err(err).Msg("Invalid ID token")
+		logger.Debug().Err(err).Msg("Invalid ID token")
 		http.Error(rw, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
 
 	// Nonce validation.
 	if idToken.Nonce != state.Nonce {
-		l.Debug().Err(err).Msg("Invalid Nonce")
+		logger.Debug().Err(err).Msg("Invalid Nonce")
 		http.Error(rw, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
@@ -480,7 +480,7 @@ func (h *Handler) handleProviderCallback(rw http.ResponseWriter, req *http.Reque
 		Expiry:       oauth2Token.Expiry,
 	}
 	if err = h.session.Create(rw, *sess); err != nil {
-		l.Debug().Err(err).Msg("Unable to create session")
+		logger.Debug().Err(err).Msg("Unable to create session")
 		http.Error(rw, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
