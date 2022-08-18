@@ -129,7 +129,7 @@ func NewHandler(ctx context.Context, cfg *Config, name string) (*Handler, error)
 		return nil, fmt.Errorf("create HTTP client: %w", err)
 	}
 
-	provider, err := BuildProvider(oidc.ClientContext(ctx, client), cfg)
+	provider, err := buildProvider(oidc.ClientContext(ctx, client), cfg)
 	if err != nil {
 		return nil, err
 	}

@@ -47,32 +47,6 @@ type Config struct {
 	Claims string
 }
 
-// SecretReference represents a Secret Reference.
-// It has enough information to retrieve secret in any namespace.
-type SecretReference struct {
-	Name      string
-	Namespace string
-}
-
-// AuthStateCookie carries the state cookie configuration.
-type AuthStateCookie struct {
-	Secret   string
-	Path     string
-	Domain   string
-	SameSite string
-	Secure   bool
-}
-
-// AuthSession carries session and session cookie configuration.
-type AuthSession struct {
-	Secret   string
-	Path     string
-	Domain   string
-	SameSite string
-	Secure   bool
-	Refresh  *bool
-}
-
 // ApplyDefaultValues applies default values on the given dynamic configuration.
 func (cfg *Config) ApplyDefaultValues() {
 	if cfg == nil {
@@ -165,13 +139,39 @@ func (cfg *Config) Validate() error {
 	return nil
 }
 
+// SecretReference represents a Secret Reference.
+// It has enough information to retrieve secret in any namespace.
+type SecretReference struct {
+	Name      string
+	Namespace string
+}
+
+// AuthStateCookie carries the state cookie configuration.
+type AuthStateCookie struct {
+	Secret   string
+	Path     string
+	Domain   string
+	SameSite string
+	Secure   bool
+}
+
+// AuthSession carries session and session cookie configuration.
+type AuthSession struct {
+	Secret   string
+	Path     string
+	Domain   string
+	SameSite string
+	Secure   bool
+	Refresh  *bool
+}
+
 // ptrBool returns a pointer to boolean.
 func ptrBool(v bool) *bool {
 	return &v
 }
 
-// BuildProvider returns a provider instance from given auth source.
-func BuildProvider(ctx context.Context, cfg *Config) (*oidc.Provider, error) {
+// buildProvider returns a provider instance from given auth source.
+func buildProvider(ctx context.Context, cfg *Config) (*oidc.Provider, error) {
 	provider, err := oidc.NewProvider(ctx, cfg.Issuer)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create provider: %w", err)
