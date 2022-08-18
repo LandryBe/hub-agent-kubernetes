@@ -43,6 +43,7 @@ func Test_newHTTPClient_WithProxyEnvVars(t *testing.T) {
 
 	client, err := newHTTPClient(nil)
 	require.NoError(t, err)
+
 	resp, err := client.Get("http://foo.bar")
 	require.NoError(t, err)
 

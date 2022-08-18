@@ -68,8 +68,7 @@ func (s *CookieSessionStore) Create(w http.ResponseWriter, data SessionData) err
 		return fmt.Errorf("unable to encode session payload: %w", err)
 	}
 
-	name := s.name
-	if len(value)+len([]byte(name)) <= s.maxSize {
+	if len(value)+len(s.name) <= s.maxSize {
 		http.SetCookie(w, &http.Cookie{
 			Name:     s.name,
 			Value:    string(value),
@@ -84,10 +83,10 @@ func (s *CookieSessionStore) Create(w http.ResponseWriter, data SessionData) err
 	}
 
 	// As we realistically won't exceed 99 cookies, subtract the size of two digits plus the '-' character.
-	chunkSize := s.maxSize - (len(name) + 3)
+	chunkSize := s.maxSize - (len(s.name) + 3)
 	for i, val := range chunkBytes(value, chunkSize) {
 		http.SetCookie(w, &http.Cookie{
-			Name:     fmt.Sprintf("%s-%d", name, i+1),
+			Name:     fmt.Sprintf("%s-%d", s.name, i+1),
 			Value:    string(val),
 			Path:     s.cfg.Path,
 			Domain:   s.cfg.Domain,
@@ -97,6 +96,7 @@ func (s *CookieSessionStore) Create(w http.ResponseWriter, data SessionData) err
 			Secure:   s.cfg.Secure,
 		})
 	}
+
 	return nil
 }
 
@@ -135,6 +135,7 @@ func (s *CookieSessionStore) Get(r *http.Request) (*SessionData, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unable to decode session: %w", err)
 	}
+
 	return &sess, nil
 }
 
@@ -198,11 +199,13 @@ func (s *CookieSessionStore) decode(p []byte) (SessionData, error) {
 	if err := json.Unmarshal(decrypted, &sess); err != nil {
 		return SessionData{}, fmt.Errorf("unable to deserialize session: %w", err)
 	}
+
 	return sess, nil
 }
 
 func chunkBytes(b []byte, lim int) [][]byte {
 	chunks := make([][]byte, 0, len(b)/lim+1)
+
 	buf := bytes.NewBuffer(b)
 	for {
 		c := buf.Next(lim)
@@ -212,5 +215,6 @@ func chunkBytes(b []byte, lim int) [][]byte {
 
 		chunks = append(chunks, c)
 	}
+
 	return chunks
 }
