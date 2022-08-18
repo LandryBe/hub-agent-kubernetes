@@ -119,9 +119,7 @@ func TestCookieSessionStore_Create(t *testing.T) {
 
 	err = store.Create(rec, sess)
 
-	if !assert.NoError(t, err) {
-		return
-	}
+	require.NoError(t, err)
 	assert.Equal(t, "test-name=AQEBAQEBAQEBAQEBAQEBAQPCeonj6H8bgW-y-xdlkLmaN-_ouVkUUyQPAE3ccSugJPjEn0E6eB61jItErDH-XxhNXvoLnh92YAV1rATcOmBVdxP1Ahk4cwyUfBgI5_9x_42fkm4WB8NnvtMReWKFnYdOTBvPfLO1sh0; Path=/; Domain=example.com; Max-Age=86400; HttpOnly; Secure; SameSite=Lax", rec.Header().Get("Set-Cookie"))
 }
 
@@ -144,9 +142,7 @@ func TestCookieSessionStore_CreateCanChunkCookies(t *testing.T) {
 
 	err = store.Create(rec, sess)
 
-	if !assert.NoError(t, err) {
-		return
-	}
+	require.NoError(t, err)
 
 	want := []string{
 		"test-name-1=AQEBAQEBAQEBAQ; Path=/; Domain=example.com; Max-Age=86400; HttpOnly; Secure; SameSite=Lax",
@@ -184,9 +180,7 @@ func TestCookieSessionStore_Update(t *testing.T) {
 
 	err = store.Update(rec, nil, sess)
 
-	if !assert.NoError(t, err) {
-		return
-	}
+	require.NoError(t, err)
 	assert.Equal(t, "test-name=AQEBAQEBAQEBAQEBAQEBAQPCeonj6H8bgW-y-xdlkLmaN-_ouVkUUyQPAE3ccSugJPjEn0E6eB61jItErDH-XxhNXvoLnh92YAV1rATcOmBVdxP1Ahk4cwyUfBgI5_9x_42fkm4WB8NnvtMReWKFnYdOTBvPfLO1sh0; Path=/; Domain=example.com; Max-Age=86400; HttpOnly; Secure; SameSite=Lax", rec.Header().Get("Set-Cookie"))
 }
 
@@ -204,9 +198,7 @@ func TestCookieSessionStore_Get(t *testing.T) {
 
 	sess, err := store.Get(req)
 
-	if !assert.NoError(t, err) {
-		return
-	}
+	require.NoError(t, err)
 	assert.Equal(t, "test1", sess.AccessToken)
 	assert.Equal(t, "test2", sess.IDToken)
 }
@@ -233,9 +225,7 @@ func TestCookieSessionStore_GetHandlesChunkedCookies(t *testing.T) {
 
 	sess, err := store.Get(req)
 
-	if !assert.NoError(t, err) {
-		return
-	}
+	require.NoError(t, err)
 	assert.Equal(t, "test1", sess.AccessToken)
 	assert.Equal(t, "test2", sess.IDToken)
 }
@@ -250,9 +240,7 @@ func TestCookieSessionStore_GetReturnsNilIfNoSessionExists(t *testing.T) {
 
 	sess, err := store.Get(req)
 
-	if !assert.NoError(t, err) {
-		return
-	}
+	require.NoError(t, err)
 	assert.Nil(t, sess)
 }
 
