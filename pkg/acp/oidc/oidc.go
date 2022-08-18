@@ -134,14 +134,6 @@ func NewHandler(ctx context.Context, cfg *Config, name string) (*Handler, error)
 		return nil, fmt.Errorf("unable to create provider: %w", err)
 	}
 
-	verifier := provider.Verifier(&oidc.Config{ClientID: cfg.ClientID})
-	oauth := &oauth2.Config{
-		ClientID:     cfg.ClientID,
-		ClientSecret: cfg.ClientSecret,
-		Endpoint:     provider.Endpoint(),
-		Scopes:       cfg.Scopes,
-	}
-
 	var pred expr.Predicate
 	if cfg.Claims != "" {
 		pred, err = expr.Parse(cfg.Claims)
@@ -161,10 +153,15 @@ func NewHandler(ctx context.Context, cfg *Config, name string) (*Handler, error)
 	}
 
 	return &Handler{
-		name:           name,
-		cfg:            cfg,
-		verifier:       verifier,
-		oauth:          oauth,
+		name:     name,
+		cfg:      cfg,
+		verifier: provider.Verifier(&oidc.Config{ClientID: cfg.ClientID}),
+		oauth: &oauth2.Config{
+			ClientID:     cfg.ClientID,
+			ClientSecret: cfg.ClientSecret,
+			Endpoint:     provider.Endpoint(),
+			Scopes:       cfg.Scopes,
+		},
 		rand:           newRandom(),
 		session:        sess,
 		stateBlock:     block,
