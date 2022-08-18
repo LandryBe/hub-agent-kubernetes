@@ -18,11 +18,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 package oidc
 
 import (
-	"context"
 	"errors"
-	"fmt"
-
-	"github.com/coreos/go-oidc/v3/oidc"
 )
 
 // Config holds the configuration for the OIDC middleware.
@@ -168,14 +164,4 @@ type AuthSession struct {
 // ptrBool returns a pointer to boolean.
 func ptrBool(v bool) *bool {
 	return &v
-}
-
-// buildProvider returns a provider instance from given auth source.
-func buildProvider(ctx context.Context, cfg *Config) (*oidc.Provider, error) {
-	provider, err := oidc.NewProvider(ctx, cfg.Issuer)
-	if err != nil {
-		return nil, fmt.Errorf("unable to create provider: %w", err)
-	}
-
-	return provider, nil
 }
