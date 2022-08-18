@@ -39,8 +39,6 @@ func Test_newHTTPClient_WithProxyEnvVars(t *testing.T) {
 
 	t.Setenv("HTTP_PROXY", testProxyServer.URL)
 
-	defer func() { _ = os.Unsetenv("HTTP_PROXY") }()
-
 	client, err := newHTTPClient(nil)
 	require.NoError(t, err)
 
