@@ -21,10 +21,12 @@ import (
 	"context"
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/big"
 	"net/http"
 	"net/url"
 	"strings"
@@ -192,7 +194,7 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	forwardedURL := fmt.Sprintf("%s://%s%s", req.Header.Get("X-Forwarded-Proto"), req.Header.Get("X-Forwarded-Host"), req.Header.Get("X-Forwarded-Uri"))
 	forwardedMethod := req.Header.Get("X-Forwarded-Method")
 
-	if isSameURL(forwardedURL, logoutURL) && forwardedMethod == http.MethodDelete {
+	if equalURL(forwardedURL, logoutURL) && forwardedMethod == http.MethodDelete {
 		if err := h.session.Delete(rw, req); err != nil {
 			logger.Debug().Err(err).Msg("Unable to delete the session")
 		}
@@ -218,7 +220,7 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	if sess == nil || (sess.IsExpired() && !(*h.cfg.Session.Refresh)) {
 		redirectURL := resolveURL(req, h.cfg.RedirectURL)
 
-		if isSameURL(forwardedURL, redirectURL) {
+		if equalURL(forwardedURL, redirectURL) {
 			logger.Debug().Msg("Handle provider callback")
 			// 5th step of the diagram, we're handling the redirected response from the auth server.
 			// spec: receiving response of section 3.1.2.5
@@ -580,7 +582,7 @@ func resolveURL(r *http.Request, u string) string {
 	return proto + "://" + u
 }
 
-func isSameURL(originalURL, otherURL string) bool {
+func equalURL(originalURL, otherURL string) bool {
 	oURL, err := url.Parse(originalURL)
 	if err != nil {
 		return false
@@ -592,4 +594,28 @@ func isSameURL(originalURL, otherURL string) bool {
 	}
 
 	return oURL.Host == otURL.Host && oURL.Path == otURL.Path
+}
+
+type random struct {
+	charset string
+}
+
+func newRandom() random {
+	return random{
+		charset: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
+	}
+}
+
+func (r random) Bytes(n int) []byte {
+	b := make([]byte, n)
+	max := big.NewInt(int64(len(r.charset)))
+	for i := range b {
+		n, _ := rand.Int(rand.Reader, max)
+		b[i] = r.charset[n.Int64()]
+	}
+	return b
+}
+
+func (r random) String(n int) string {
+	return string(r.Bytes(n))
 }

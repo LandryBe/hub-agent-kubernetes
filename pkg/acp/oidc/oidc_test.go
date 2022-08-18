@@ -40,12 +40,12 @@ import (
 func TestNewMiddlewareFromSource_ValidatesConfiguration(t *testing.T) {
 	tests := []struct {
 		desc    string
-		cfg     Config
+		cfg     *Config
 		wantErr string
 	}{
 		{
 			desc: "empty Issuer",
-			cfg: Config{
+			cfg: &Config{
 				Issuer:       "",
 				ClientID:     "bar",
 				ClientSecret: "bat",
@@ -61,7 +61,7 @@ func TestNewMiddlewareFromSource_ValidatesConfiguration(t *testing.T) {
 		},
 		{
 			desc: "empty ClientID",
-			cfg: Config{
+			cfg: &Config{
 				Issuer:       "foo",
 				ClientID:     "",
 				ClientSecret: "bat",
@@ -77,7 +77,7 @@ func TestNewMiddlewareFromSource_ValidatesConfiguration(t *testing.T) {
 		},
 		{
 			desc: "empty ClientSecret",
-			cfg: Config{
+			cfg: &Config{
 				Issuer:       "foo",
 				ClientID:     "bar",
 				ClientSecret: "",
@@ -93,7 +93,7 @@ func TestNewMiddlewareFromSource_ValidatesConfiguration(t *testing.T) {
 		},
 		{
 			desc: "empty Session Secret",
-			cfg: Config{
+			cfg: &Config{
 				Issuer:       "foo",
 				ClientID:     "bar",
 				ClientSecret: "bat",
@@ -109,7 +109,7 @@ func TestNewMiddlewareFromSource_ValidatesConfiguration(t *testing.T) {
 		},
 		{
 			desc: "bad size for Session Secret",
-			cfg: Config{
+			cfg: &Config{
 				Issuer:       "foo",
 				ClientID:     "bar",
 				ClientSecret: "bat",
@@ -125,7 +125,7 @@ func TestNewMiddlewareFromSource_ValidatesConfiguration(t *testing.T) {
 		},
 		{
 			desc: "empty State Secret",
-			cfg: Config{
+			cfg: &Config{
 				Issuer:       "foo",
 				ClientID:     "bar",
 				ClientSecret: "bat",
@@ -139,7 +139,7 @@ func TestNewMiddlewareFromSource_ValidatesConfiguration(t *testing.T) {
 		},
 		{
 			desc: "bad size for State Secret",
-			cfg: Config{
+			cfg: &Config{
 				Issuer:       "foo",
 				ClientID:     "bar",
 				ClientSecret: "bat",
@@ -158,8 +158,8 @@ func TestNewMiddlewareFromSource_ValidatesConfiguration(t *testing.T) {
 	for _, test := range tests {
 		test := test
 		t.Run(test.desc, func(t *testing.T) {
-			ApplyDefaultValues(&test.cfg)
-			_, err := NewHandler(context.Background(), &test.cfg, test.desc)
+			test.cfg.ApplyDefaultValues()
+			_, err := NewHandler(context.Background(), test.cfg, test.desc)
 
 			if test.wantErr != "" {
 				assert.Error(t, err)
@@ -207,7 +207,7 @@ pueWv55I3iRK0PyXEVTl0Srv1wmWMMdDNg==
 	srv.TLS = &tls.Config{Certificates: []tls.Certificate{cert}, MinVersion: tls.VersionTLS12}
 	srv.StartTLS()
 
-	cfg := Config{
+	cfg := &Config{
 		Issuer:       srv.URL,
 		ClientID:     "client-id",
 		ClientSecret: "client-secret",
@@ -222,9 +222,9 @@ pueWv55I3iRK0PyXEVTl0Srv1wmWMMdDNg==
 			Secret: "secret1234567890",
 		},
 	}
-	ApplyDefaultValues(&cfg)
+	cfg.ApplyDefaultValues()
 
-	_, err = NewHandler(context.Background(), &cfg, "oidc")
+	_, err = NewHandler(context.Background(), cfg, "oidc")
 	require.NoError(t, err)
 }
 
@@ -232,7 +232,7 @@ func TestMiddleware_RedirectsCorrectly(t *testing.T) {
 	tests := []struct {
 		desc    string
 		request *http.Request
-		cfg     Config
+		cfg     *Config
 
 		wantStatus      int
 		wantRedirect    bool
@@ -243,7 +243,7 @@ func TestMiddleware_RedirectsCorrectly(t *testing.T) {
 		{
 			desc:    "redirects with absolute redirect URL",
 			request: httptest.NewRequest(http.MethodGet, "/foo", nil),
-			cfg: Config{
+			cfg: &Config{
 				RedirectURL: "http://example.com/callback",
 				AuthParams: map[string]string{
 					"hd": "example.com",
@@ -263,7 +263,7 @@ func TestMiddleware_RedirectsCorrectly(t *testing.T) {
 		{
 			desc:    "redirects with relative redirect URL",
 			request: httptest.NewRequest(http.MethodGet, "http://blah.meh/foo", nil),
-			cfg: Config{
+			cfg: &Config{
 				RedirectURL: "/callback",
 				StateCookie: &AuthStateCookie{
 					Secret: "secret1234567890",
@@ -277,7 +277,7 @@ func TestMiddleware_RedirectsCorrectly(t *testing.T) {
 		{
 			desc:    "redirects with relative redirect scheme",
 			request: httptest.NewRequest(http.MethodGet, "https://blah.meh/foo", nil),
-			cfg: Config{
+			cfg: &Config{
 				RedirectURL: "example.com/callback",
 				StateCookie: &AuthStateCookie{
 					Secret: "secret1234567890",
@@ -291,7 +291,7 @@ func TestMiddleware_RedirectsCorrectly(t *testing.T) {
 		{
 			desc:    "returns unauthorized if method is PUT",
 			request: httptest.NewRequest(http.MethodPut, "/foo", nil),
-			cfg: Config{
+			cfg: &Config{
 				StateCookie: &AuthStateCookie{
 					Secret: "secret1234567890",
 				},
@@ -301,7 +301,7 @@ func TestMiddleware_RedirectsCorrectly(t *testing.T) {
 		{
 			desc:    "returns unauthorized if method is POST",
 			request: httptest.NewRequest(http.MethodPost, "/foo", nil),
-			cfg: Config{
+			cfg: &Config{
 				StateCookie: &AuthStateCookie{
 					Secret: "secret1234567890",
 				},
@@ -311,7 +311,7 @@ func TestMiddleware_RedirectsCorrectly(t *testing.T) {
 		{
 			desc:    "returns unauthorized if method is DELETE",
 			request: httptest.NewRequest(http.MethodDelete, "/foo", nil),
-			cfg: Config{
+			cfg: &Config{
 				StateCookie: &AuthStateCookie{
 					Secret: "secret1234567890",
 				},
@@ -321,7 +321,7 @@ func TestMiddleware_RedirectsCorrectly(t *testing.T) {
 		{
 			desc:    "returns unauthorized if method is PATCH",
 			request: httptest.NewRequest(http.MethodPatch, "/foo", nil),
-			cfg: Config{
+			cfg: &Config{
 				StateCookie: &AuthStateCookie{
 					Secret: "secret1234567890",
 				},
@@ -331,7 +331,7 @@ func TestMiddleware_RedirectsCorrectly(t *testing.T) {
 		{
 			desc:    "returns unauthorized if path is favicon.ico",
 			request: httptest.NewRequest(http.MethodGet, "https://foo.com/favicon.ico", nil),
-			cfg: Config{
+			cfg: &Config{
 				StateCookie: &AuthStateCookie{
 					Secret: "secret1234567890",
 				},
@@ -341,7 +341,7 @@ func TestMiddleware_RedirectsCorrectly(t *testing.T) {
 		{
 			desc:    "redirects with custom state cookie domain",
 			request: httptest.NewRequest(http.MethodGet, "/foo", nil),
-			cfg: Config{
+			cfg: &Config{
 				RedirectURL: "http://example.com/callback",
 				AuthParams: map[string]string{
 					"hd": "example.com",
@@ -374,7 +374,7 @@ func TestMiddleware_RedirectsCorrectly(t *testing.T) {
 	for _, test := range tests {
 		test := test
 		t.Run(test.desc, func(t *testing.T) {
-			ApplyDefaultValues(&test.cfg)
+			test.cfg.ApplyDefaultValues()
 
 			oauth := &oauth2.Config{
 				Endpoint: oauth2.Endpoint{
@@ -389,7 +389,7 @@ func TestMiddleware_RedirectsCorrectly(t *testing.T) {
 			handler := buildHandler(t)
 			handler.oauth = oauth
 			handler.session = session
-			handler.cfg = &test.cfg
+			handler.cfg = test.cfg
 
 			test.request.Header.Add("X-Forwarded-Method", test.request.Method)
 			test.request.Header.Add("X-Forwarded-Proto", "http")
@@ -504,7 +504,7 @@ func TestMiddleware_ExchangesTokenOnCallback(t *testing.T) {
 func TestMiddleware_ForwardsCorrectly(t *testing.T) {
 	tests := []struct {
 		desc    string
-		cfg     Config
+		cfg     *Config
 		expiry  time.Time
 		idToken string
 		headers map[string]string
@@ -516,7 +516,7 @@ func TestMiddleware_ForwardsCorrectly(t *testing.T) {
 	}{
 		{
 			desc: "returns bad request if the stored id token is bad",
-			cfg: Config{
+			cfg: &Config{
 				Issuer:       "http://foo.com",
 				ClientID:     "clientID",
 				ClientSecret: "secret1234567890",
@@ -533,7 +533,7 @@ func TestMiddleware_ForwardsCorrectly(t *testing.T) {
 		},
 		{
 			desc: "returns forbidden if the claims are not valid",
-			cfg: Config{
+			cfg: &Config{
 				Issuer:       "http://foo.com",
 				ClientID:     "clientID",
 				ClientSecret: "secret1234567890",
@@ -551,7 +551,7 @@ func TestMiddleware_ForwardsCorrectly(t *testing.T) {
 		},
 		{
 			desc: "refreshes token if expired",
-			cfg: Config{
+			cfg: &Config{
 				Issuer:       "http://foo.com",
 				ClientID:     "clientID",
 				ClientSecret: "secret1234567890",
@@ -579,7 +579,7 @@ func TestMiddleware_ForwardsCorrectly(t *testing.T) {
 		},
 		{
 			desc: "forwards call (and header is canonicalized)",
-			cfg: Config{
+			cfg: &Config{
 				Issuer:       "http://foo.com",
 				ClientID:     "clientID",
 				ClientSecret: "secret1234567890",
@@ -605,7 +605,7 @@ func TestMiddleware_ForwardsCorrectly(t *testing.T) {
 		},
 		{
 			desc: "overwrite forwarded headers",
-			cfg: Config{
+			cfg: &Config{
 				Issuer:       "http://foo.com",
 				ClientID:     "clientID",
 				ClientSecret: "secret1234567890",
@@ -638,7 +638,7 @@ func TestMiddleware_ForwardsCorrectly(t *testing.T) {
 	for _, test := range tests {
 		test := test
 		t.Run(test.desc, func(t *testing.T) {
-			ApplyDefaultValues(&test.cfg)
+			test.cfg.ApplyDefaultValues()
 
 			session := newSessionStoreMock(t).
 				OnGetRaw(mock.Anything).ReturnsFn(func(*http.Request) (*SessionData, error) {
@@ -680,7 +680,7 @@ func TestMiddleware_ForwardsCorrectly(t *testing.T) {
 			handler.oauth = oauth
 			handler.session = session
 			handler.validateClaims = pred
-			handler.cfg = &test.cfg
+			handler.cfg = test.cfg
 
 			r := httptest.NewRequest(http.MethodGet, "/foo", nil)
 			for k, v := range test.headers {

@@ -74,7 +74,11 @@ type AuthSession struct {
 }
 
 // ApplyDefaultValues applies default values on the given dynamic configuration.
-func ApplyDefaultValues(cfg *Config) {
+func (cfg *Config) ApplyDefaultValues() {
+	if cfg == nil {
+		return
+	}
+
 	if len(cfg.Scopes) == 0 {
 		cfg.Scopes = []string{"openid"}
 	}
@@ -114,7 +118,11 @@ func ApplyDefaultValues(cfg *Config) {
 
 // Validate validates configuration.
 func (cfg *Config) Validate() error {
-	ApplyDefaultValues(cfg)
+	if cfg == nil {
+		return nil
+	}
+
+	cfg.ApplyDefaultValues()
 
 	if cfg.Issuer == "" {
 		return errors.New("missing issuer")
