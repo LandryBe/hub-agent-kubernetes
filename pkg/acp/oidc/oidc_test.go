@@ -204,7 +204,7 @@ pueWv55I3iRK0PyXEVTl0Srv1wmWMMdDNg==
 	cert, err := tls.X509KeyPair(certPem, keyPem)
 	require.NoError(t, err)
 
-	srv.TLS = &tls.Config{Certificates: []tls.Certificate{cert}}
+	srv.TLS = &tls.Config{Certificates: []tls.Certificate{cert}, MinVersion: tls.VersionTLS12}
 	srv.StartTLS()
 
 	cfg := Config{
