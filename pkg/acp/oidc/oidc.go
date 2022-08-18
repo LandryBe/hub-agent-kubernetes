@@ -129,9 +129,9 @@ func NewHandler(ctx context.Context, cfg *Config, name string) (*Handler, error)
 		return nil, fmt.Errorf("create HTTP client: %w", err)
 	}
 
-	provider, err := buildProvider(oidc.ClientContext(ctx, client), cfg)
+	provider, err := oidc.NewProvider(oidc.ClientContext(ctx, client), cfg.Issuer)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to create provider: %w", err)
 	}
 
 	verifier := provider.Verifier(&oidc.Config{ClientID: cfg.ClientID})
