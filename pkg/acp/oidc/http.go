@@ -55,7 +55,7 @@ func newHTTPClient(tlsCfg *TLS) (*http.Client, error) {
 	client.Transport = &http.Transport{
 		TLSClientConfig: &tls.Config{
 			RootCAs:            pool,
-			InsecureSkipVerify: tlsCfg.InsecureSkipVerify,
+			InsecureSkipVerify: tlsCfg.InsecureSkipVerify, //nolint:gosec // it's an option of the CLI.
 		},
 	}
 
