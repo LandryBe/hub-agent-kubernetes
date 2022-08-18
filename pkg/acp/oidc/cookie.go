@@ -159,7 +159,19 @@ func (s *CookieSessionStore) getCookiesBytes(r *http.Request) []byte {
 
 // RemoveCookie removes the session cookie from the request.
 func (s *CookieSessionStore) RemoveCookie(r *http.Request) {
-	deleteCookie(r, s.name)
+	cs := r.Cookies()
+
+	res := make([]*http.Cookie, 0, len(cs))
+	for _, c := range cs {
+		if !strings.HasPrefix(c.Name, s.name) {
+			res = append(res, c)
+		}
+	}
+
+	r.Header.Del("Cookie")
+	for _, c := range res {
+		r.Header.Add("Cookie", c.String())
+	}
 }
 
 func (s *CookieSessionStore) encode(session SessionData) ([]byte, error) {
@@ -217,4 +229,26 @@ func chunkBytes(b []byte, lim int) [][]byte {
 	}
 
 	return chunks
+}
+
+func getCookie(r *http.Request, name string) ([]byte, bool) {
+	c, err := r.Cookie(name)
+	if err != nil {
+		return nil, false
+	}
+
+	return []byte(c.Value), true
+}
+
+func parseSameSite(raw string) http.SameSite {
+	switch strings.ToLower(raw) {
+	case "lax":
+		return http.SameSiteLaxMode
+	case "strict":
+		return http.SameSiteStrictMode
+	case "none":
+		return http.SameSiteNoneMode
+	default:
+		return http.SameSiteDefaultMode
+	}
 }
