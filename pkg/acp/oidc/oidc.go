@@ -192,7 +192,7 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	forwardedURL := fmt.Sprintf("%s://%s%s", req.Header.Get("X-Forwarded-Proto"), req.Header.Get("X-Forwarded-Host"), req.Header.Get("X-Forwarded-Uri"))
 	forwardedMethod := req.Header.Get("X-Forwarded-Method")
 
-	if isURL(forwardedURL, logoutURL) && forwardedMethod == http.MethodDelete {
+	if isSameURL(forwardedURL, logoutURL) && forwardedMethod == http.MethodDelete {
 		if err := h.session.Delete(rw, req); err != nil {
 			logger.Debug().Err(err).Msg("Unable to delete the session")
 		}
@@ -218,7 +218,7 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	if sess == nil || (sess.IsExpired() && !(*h.cfg.Session.Refresh)) {
 		redirectURL := resolveURL(req, h.cfg.RedirectURL)
 
-		if isURL(forwardedURL, redirectURL) {
+		if isSameURL(forwardedURL, redirectURL) {
 			logger.Debug().Msg("Handle provider callback")
 			// 5th step of the diagram, we're handling the redirected response from the auth server.
 			// spec: receiving response of section 3.1.2.5
@@ -580,7 +580,7 @@ func resolveURL(r *http.Request, u string) string {
 	return proto + "://" + u
 }
 
-func isURL(originalURL, otherURL string) bool {
+func isSameURL(originalURL, otherURL string) bool {
 	oURL, err := url.Parse(originalURL)
 	if err != nil {
 		return false
@@ -590,8 +590,6 @@ func isURL(originalURL, otherURL string) bool {
 	if err != nil {
 		return false
 	}
-
-	log.Debug().Msg("isURL: " + oURL.Host + "*" + otURL.Host + "*" + oURL.Path + "*" + otURL.Path)
 
 	return oURL.Host == otURL.Host && oURL.Path == otURL.Path
 }
