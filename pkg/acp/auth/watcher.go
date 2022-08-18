@@ -40,19 +40,24 @@ import (
 // Also, if multiple clients of this watcher are not interested in the same resources
 // add a parameter to NewWatcher to subscribe only to a subset of events.
 
+type oidcSecret struct {
+	ClientSecret   string
+	SessionKey     string
+	StateCookieKey string
+}
+
 // Watcher watches access control policy resources and builds configurations out of them.
 type Watcher struct {
 	configsMu sync.RWMutex
 	configs   map[string]*acp.Config
 	previous  map[string]*acp.Config
 
-	secrets map[string]oidcSecret
+	secrets         map[string]oidcSecret
+	previousSecrets map[string]oidcSecret
 
 	refresh chan struct{}
 
 	switcher *HTTPHandlerSwitcher
-
-	previousSecrets map[string]oidcSecret
 }
 
 // NewWatcher returns a new watcher to track ACP resources. It calls the given Updater when an ACP is modified at most
@@ -85,12 +90,12 @@ func (w *Watcher) Run(ctx context.Context) {
 
 			w.previous = cfgs
 
-			secrets := make(map[string]oidcSecret, len(w.secrets))
+			previousSecrets := make(map[string]oidcSecret, len(w.secrets))
 			for k, v := range w.secrets {
-				secrets[k] = v
+				previousSecrets[k] = v
 			}
 
-			w.previousSecrets = secrets
+			w.previousSecrets = previousSecrets
 
 			w.configsMu.RUnlock()
 
@@ -110,12 +115,6 @@ func (w *Watcher) Run(ctx context.Context) {
 	}
 }
 
-type oidcSecret struct {
-	ClientSecret   string
-	SessionKey     string
-	StateCookieKey string
-}
-
 // OnAdd implements Kubernetes cache.ResourceEventHandler so it can be used as an informer event handler.
 func (w *Watcher) OnAdd(obj interface{}) {
 	switch v := obj.(type) {
@@ -123,6 +122,7 @@ func (w *Watcher) OnAdd(obj interface{}) {
 		w.configsMu.Lock()
 		w.configs[v.ObjectMeta.Name] = acp.ConfigFromPolicy(v)
 		w.configsMu.Unlock()
+
 	case *corev1.Secret:
 		w.configsMu.Lock()
 		w.secrets[v.Namespace+"@"+v.Name] = oidcSecret{
@@ -131,6 +131,7 @@ func (w *Watcher) OnAdd(obj interface{}) {
 			StateCookieKey: string(v.Data["stateCookieKey"]),
 		}
 		w.configsMu.Unlock()
+
 	default:
 		log.Error().
 			Str("component", "acp_watcher").
@@ -152,6 +153,7 @@ func (w *Watcher) OnUpdate(_, newObj interface{}) {
 		w.configsMu.Lock()
 		w.configs[v.ObjectMeta.Name] = acp.ConfigFromPolicy(v)
 		w.configsMu.Unlock()
+
 	case *corev1.Secret:
 		w.configsMu.Lock()
 		w.secrets[v.Namespace+"@"+v.Name] = oidcSecret{
@@ -160,6 +162,7 @@ func (w *Watcher) OnUpdate(_, newObj interface{}) {
 			StateCookieKey: string(v.Data["stateCookieKey"]),
 		}
 		w.configsMu.Unlock()
+
 	default:
 		log.Error().
 			Str("component", "acp_watcher").
@@ -181,10 +184,12 @@ func (w *Watcher) OnDelete(obj interface{}) {
 		w.configsMu.Lock()
 		delete(w.configs, v.ObjectMeta.Name)
 		w.configsMu.Unlock()
+
 	case *corev1.Secret:
 		w.configsMu.Lock()
 		delete(w.secrets, v.Namespace+"@"+v.Name)
 		w.configsMu.Unlock()
+
 	default:
 		log.Error().
 			Str("component", "acp_watcher").
@@ -286,5 +291,6 @@ func populateSecrets(config *oidc.Config, secret oidcSecret) error {
 		config.StateCookie = &oidc.AuthStateCookie{}
 	}
 	config.StateCookie.Secret = secret.StateCookieKey
+
 	return nil
 }
