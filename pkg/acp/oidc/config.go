@@ -23,24 +23,23 @@ import (
 
 // Config holds the configuration for the OIDC middleware.
 type Config struct {
-	Issuer       string
-	ClientID     string
-	ClientSecret string
-	Secret       *SecretReference
-	TLS          *TLS
+	Issuer       string           `json:"issuer,omitempty"`
+	ClientID     string           `json:"clientId,omitempty"`
+	ClientSecret string           `json:"-"`
+	Secret       *SecretReference `json:"secret,omitempty"`
 
-	RedirectURL string
-	LogoutURL   string
-	Scopes      []string
-	AuthParams  map[string]string
-	StateCookie *AuthStateCookie
-	Session     *AuthSession
+	RedirectURL string            `json:"redirectUrl,omitempty"`
+	LogoutURL   string            `json:"logoutUrl,omitempty"`
+	Scopes      []string          `json:"scopes,omitempty"`
+	AuthParams  map[string]string `json:"authParams,omitempty"`
+	StateCookie *AuthStateCookie  `json:"stateCookie,omitempty"`
+	Session     *AuthSession      `json:"session,omitempty"`
 
 	// ForwardHeaders defines headers that should be added to the request and populated with values extracted from the ID token.
-	ForwardHeaders map[string]string
+	ForwardHeaders map[string]string `json:"forwardHeaders,omitempty"`
 	// Claims defines an expression to perform validation on the ID token. For example:
 	//     Equals(`grp`, `admin`) && Equals(`scope`, `deploy`)
-	Claims string
+	Claims string `json:"claims,omitempty"`
 }
 
 // ApplyDefaultValues applies default values on the given dynamic configuration.
@@ -144,21 +143,21 @@ type SecretReference struct {
 
 // AuthStateCookie carries the state cookie configuration.
 type AuthStateCookie struct {
-	Secret   string
-	Path     string
-	Domain   string
-	SameSite string
-	Secure   bool
+	Secret   string `json:"-"`
+	Path     string `json:"path,omitempty"`
+	Domain   string `json:"domain,omitempty"`
+	SameSite string `json:"sameSite,omitempty"`
+	Secure   bool   `json:"secure,omitempty"`
 }
 
 // AuthSession carries session and session cookie configuration.
 type AuthSession struct {
-	Secret   string
-	Path     string
-	Domain   string
-	SameSite string
-	Secure   bool
-	Refresh  *bool
+	Secret   string `json:"-"`
+	Path     string `json:"path,omitempty"`
+	Domain   string `json:"domain,omitempty"`
+	SameSite string `json:"sameSite,omitempty"`
+	Secure   bool   `json:"secure,omitempty"`
+	Refresh  *bool  `json:"refresh,omitempty"`
 }
 
 // ptrBool returns a pointer to boolean.

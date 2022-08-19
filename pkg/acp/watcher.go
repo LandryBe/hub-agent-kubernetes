@@ -192,7 +192,6 @@ func buildAccessControlPolicySpec(a ACP) hubv1alpha1.AccessControlPolicySpec {
 	switch {
 	case a.OIDC != nil:
 		spec.OIDC = &hubv1alpha1.AccessControlOIDC{
-			ClientSecret:   a.OIDC.ClientSecret,
 			Issuer:         a.OIDC.Issuer,
 			ClientID:       a.OIDC.ClientID,
 			RedirectURL:    a.OIDC.RedirectURL,
@@ -212,7 +211,6 @@ func buildAccessControlPolicySpec(a ACP) hubv1alpha1.AccessControlPolicySpec {
 
 		if a.OIDC.StateCookie != nil {
 			spec.OIDC.StateCookie = &hubv1alpha1.StateCookie{
-				Secret:   a.OIDC.StateCookie.Secret,
 				SameSite: a.OIDC.StateCookie.SameSite,
 				Secure:   a.OIDC.StateCookie.Secure,
 				Domain:   a.OIDC.StateCookie.Domain,
@@ -222,19 +220,11 @@ func buildAccessControlPolicySpec(a ACP) hubv1alpha1.AccessControlPolicySpec {
 
 		if a.OIDC.Session != nil {
 			spec.OIDC.Session = &hubv1alpha1.Session{
-				Secret:   a.OIDC.Session.Secret,
 				SameSite: a.OIDC.Session.SameSite,
 				Secure:   a.OIDC.Session.Secure,
 				Domain:   a.OIDC.Session.Domain,
 				Path:     a.OIDC.Session.Path,
 				Refresh:  a.OIDC.Session.Refresh,
-			}
-		}
-
-		if a.OIDC.TLS != nil {
-			spec.OIDC.TLS = &hubv1alpha1.TLS{
-				CABundle:           a.OIDC.TLS.CABundle,
-				InsecureSkipVerify: a.OIDC.TLS.InsecureSkipVerify,
 			}
 		}
 

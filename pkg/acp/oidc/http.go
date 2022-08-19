@@ -18,16 +18,13 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 package oidc
 
 import (
-	"crypto/tls"
-	"crypto/x509"
-	"errors"
 	"net"
 	"net/http"
 	"time"
 )
 
-func newHTTPClient(tlsCfg *TLS) (*http.Client, error) {
-	client := &http.Client{
+func newHTTPClient() *http.Client {
+	return &http.Client{
 		Transport: &http.Transport{
 			DialContext: (&net.Dialer{
 				Timeout:   30 * time.Second,
@@ -38,26 +35,4 @@ func newHTTPClient(tlsCfg *TLS) (*http.Client, error) {
 		},
 		Timeout: 5 * time.Second,
 	}
-
-	if tlsCfg == nil {
-		return client, nil
-	}
-
-	pool, err := x509.SystemCertPool()
-	if err != nil {
-		pool = x509.NewCertPool()
-	}
-
-	if !pool.AppendCertsFromPEM(tlsCfg.CABundle) {
-		return nil, errors.New("wrong CA bundle")
-	}
-
-	client.Transport = &http.Transport{
-		TLSClientConfig: &tls.Config{
-			RootCAs:            pool,
-			InsecureSkipVerify: tlsCfg.InsecureSkipVerify, //nolint:gosec // it's an option of the CLI.
-		},
-	}
-
-	return client, nil
 }
