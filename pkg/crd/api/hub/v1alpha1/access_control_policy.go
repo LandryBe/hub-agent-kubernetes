@@ -92,8 +92,7 @@ type AccessControlOIDC struct {
 	ClientID string `json:"clientId,omitempty"`
 	TLS      *TLS   `json:"tls,omitempty"`
 
-	Secret       *corev1.SecretReference `json:"secret,omitempty"`
-	ClientSecret string                  `json:"clientSecret,omitempty"`
+	Secret *corev1.SecretReference `json:"secret,omitempty"`
 
 	RedirectURL string            `json:"redirectUrl,omitempty"`
 	LogoutURL   string            `json:"logoutUrl,omitempty"`
@@ -115,7 +114,6 @@ type TLS struct {
 
 // StateCookie holds state cookie configuration.
 type StateCookie struct {
-	Secret   string `json:"secret,omitempty"`
 	SameSite string `json:"sameSite,omitempty"`
 	Secure   bool   `json:"secure,omitempty"`
 	Domain   string `json:"domain,omitempty"`
@@ -124,7 +122,6 @@ type StateCookie struct {
 
 // Session holds session configuration.
 type Session struct {
-	Secret   string `json:"secret,omitempty"`
 	SameSite string `json:"sameSite,omitempty"`
 	Secure   bool   `json:"secure,omitempty"`
 	Domain   string `json:"domain,omitempty"`

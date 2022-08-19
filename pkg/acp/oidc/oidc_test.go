@@ -20,7 +20,6 @@ package oidc
 import (
 	"context"
 	"crypto/aes"
-	"crypto/tls"
 	"encoding/base64"
 	"net/http"
 	"net/http/httptest"
@@ -170,62 +169,6 @@ func TestNewMiddlewareFromSource_ValidatesConfiguration(t *testing.T) {
 			assert.NoError(t, err)
 		})
 	}
-}
-
-func TestNewMiddlewareFromSource_SelfSignedIssuer(t *testing.T) {
-	certPem := []byte(`-----BEGIN CERTIFICATE-----
-MIIB/DCCAaGgAwIBAgIRAK5Wtyw1YesDMV3koA8fJsswCgYIKoZIzj0EAwIwLDET
-MBEGA1UEChMKQ29udGFpbm91czEVMBMGA1UEAxMMVHJhZWZpa0VFIENBMCAXDTE5
-MTIwNDA2NTIwMloYDzIxMTkxMTEwMDY1MjAyWjAWMRQwEgYDVQQDEwtzZXJ2ZXIu
-dGVzdDBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABLE9Ao3QpZNz5DzEnYHxz/Ot
-3xyBNRoFndrF5FrcpyLFg/Zi4tl82abnlr+eSN4kStD8lxFU5dEq79cJljDHQzaj
-gbcwgbQwDgYDVR0PAQH/BAQDAgGGMBMGA1UdJQQMMAoGCCsGAQUFBwMBMAwGA1Ud
-EwEB/wQCMAAwKQYDVR0OBCIEIFy7RoCVcFDDZ3gtoPfrAcsUBw3HS6hSw7RiiCGF
-Xkm+MCsGA1UdIwQkMCKAIPOHvhXw6cD5Kx9NdmEwmGCGdWCH1lI75OVP9/Qqvpdm
-MCcGA1UdEQQgMB6CC3NlcnZlci50ZXN0gglsb2NhbGhvc3SHBH8AAAEwCgYIKoZI
-zj0EAwIDSQAwRgIhAOnI/7c0cv0QakZ7c/e8ijCNH5sG/2p4JbtsEDadlNvgAiEA
-wFlfYEb6TyjHQfXIZecpdKdmuB8Jm4SZIkDrFH1SlEw=
------END CERTIFICATE-----`)
-
-	keyPem := []byte(`-----BEGIN EC PRIVATE KEY-----
-MHcCAQEEIEf/bAjKUPuGEon0LU66l1Hk57SnZp2kA42cioePzzsdoAoGCCqGSM49
-AwEHoUQDQgAEsT0CjdClk3PkPMSdgfHP863fHIE1GgWd2sXkWtynIsWD9mLi2XzZ
-pueWv55I3iRK0PyXEVTl0Srv1wmWMMdDNg==
------END EC PRIVATE KEY-----`)
-
-	srv := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		require.Equal(t, "/.well-known/openid-configuration", r.RequestURI)
-
-		w.Header().Set("Content-Type", "application/json")
-		_, err := w.Write([]byte(`{"issuer": "https://` + r.Host + `"}`))
-		require.NoError(t, err)
-	}))
-
-	cert, err := tls.X509KeyPair(certPem, keyPem)
-	require.NoError(t, err)
-
-	srv.TLS = &tls.Config{Certificates: []tls.Certificate{cert}, MinVersion: tls.VersionTLS12}
-	srv.StartTLS()
-
-	cfg := &Config{
-		Issuer:       srv.URL,
-		ClientID:     "client-id",
-		ClientSecret: "client-secret",
-		TLS: &TLS{
-			CABundle: certPem,
-		},
-		RedirectURL: "test",
-		StateCookie: &AuthStateCookie{
-			Secret: "secret1234567890",
-		},
-		Session: &AuthSession{
-			Secret: "secret1234567890",
-		},
-	}
-	cfg.ApplyDefaultValues()
-
-	_, err = NewHandler(context.Background(), cfg, "oidc")
-	require.NoError(t, err)
 }
 
 func TestMiddleware_RedirectsCorrectly(t *testing.T) {
@@ -766,7 +709,7 @@ func buildHandler(t *testing.T) *Handler {
 	stateBlock, err := aes.NewCipher([]byte("secret1234567890"))
 	require.NoError(t, err)
 
-	client, err := newHTTPClient(nil)
+	client := newHTTPClient()
 	require.NoError(t, err)
 
 	return &Handler{

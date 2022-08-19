@@ -68,7 +68,6 @@ func ConfigFromPolicy(policy *hubv1alpha1.AccessControlPolicy) *Config {
 
 		conf := &Config{
 			OIDC: &oidc.Config{
-				ClientSecret:   oidcCfg.ClientSecret,
 				Issuer:         oidcCfg.Issuer,
 				ClientID:       oidcCfg.ClientID,
 				RedirectURL:    oidcCfg.RedirectURL,
@@ -89,7 +88,6 @@ func ConfigFromPolicy(policy *hubv1alpha1.AccessControlPolicy) *Config {
 
 		if oidcCfg.StateCookie != nil {
 			conf.OIDC.StateCookie = &oidc.AuthStateCookie{
-				Secret:   oidcCfg.StateCookie.Secret,
 				Path:     oidcCfg.StateCookie.Path,
 				Domain:   oidcCfg.StateCookie.Domain,
 				SameSite: oidcCfg.StateCookie.SameSite,
@@ -99,19 +97,11 @@ func ConfigFromPolicy(policy *hubv1alpha1.AccessControlPolicy) *Config {
 
 		if oidcCfg.StateCookie != nil {
 			conf.OIDC.Session = &oidc.AuthSession{
-				Secret:   oidcCfg.Session.Secret,
 				Path:     oidcCfg.Session.Path,
 				Domain:   oidcCfg.Session.Domain,
 				SameSite: oidcCfg.Session.SameSite,
 				Secure:   oidcCfg.Session.Secure,
 				Refresh:  oidcCfg.Session.Refresh,
-			}
-		}
-
-		if oidcCfg.TLS != nil {
-			conf.OIDC.TLS = &oidc.TLS{
-				CABundle:           oidcCfg.TLS.CABundle,
-				InsecureSkipVerify: oidcCfg.TLS.InsecureSkipVerify,
 			}
 		}
 

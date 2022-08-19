@@ -124,10 +124,7 @@ func NewHandler(ctx context.Context, cfg *Config, name string) (*Handler, error)
 		return nil, fmt.Errorf("validate configuration: %w", err)
 	}
 
-	client, err := newHTTPClient(cfg.TLS)
-	if err != nil {
-		return nil, fmt.Errorf("create HTTP client: %w", err)
-	}
+	client := newHTTPClient()
 
 	provider, err := oidc.NewProvider(oidc.ClientContext(ctx, client), cfg.Issuer)
 	if err != nil {
