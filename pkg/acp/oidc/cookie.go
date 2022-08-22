@@ -158,7 +158,7 @@ func (s *CookieSessionStore) getCookiesBytes(r *http.Request) []byte {
 }
 
 // RemoveCookie removes the session cookie from the request.
-func (s *CookieSessionStore) RemoveCookie(r *http.Request) {
+func (s *CookieSessionStore) RemoveCookie(rw http.ResponseWriter, r *http.Request) {
 	cs := r.Cookies()
 
 	res := make([]*http.Cookie, 0, len(cs))
@@ -168,9 +168,9 @@ func (s *CookieSessionStore) RemoveCookie(r *http.Request) {
 		}
 	}
 
-	r.Header.Del("Cookie")
+	rw.Header().Del("Cookie")
 	for _, c := range res {
-		r.Header.Add("Cookie", c.String())
+		rw.Header().Add("Cookie", c.String())
 	}
 }
 

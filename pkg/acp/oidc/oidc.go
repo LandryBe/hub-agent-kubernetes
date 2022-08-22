@@ -98,7 +98,7 @@ type SessionStore interface {
 	Update(http.ResponseWriter, *http.Request, SessionData) error
 	Delete(http.ResponseWriter, *http.Request) error
 	Get(*http.Request) (*SessionData, error)
-	RemoveCookie(*http.Request)
+	RemoveCookie(http.ResponseWriter, *http.Request)
 }
 
 // Handler performs OIDC authentication and authorisation on incoming requests.
@@ -302,6 +302,7 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 	// 10th step of diagram.
 	rw.Header().Set("Authorization", "Bearer "+sess.AccessToken)
+	h.session.RemoveCookie(rw, req)
 
 	rw.WriteHeader(http.StatusOK)
 }
