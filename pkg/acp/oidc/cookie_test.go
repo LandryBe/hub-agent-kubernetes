@@ -95,9 +95,10 @@ func TestCookieSessionStore_RemoveCookieOnlyRemovesOurCookie(t *testing.T) {
 		Value: "value2",
 	})
 
-	store.RemoveCookie(req)
+	w := httptest.NewRecorder()
+	store.RemoveCookie(w, req)
 
-	assert.Equal(t, "custom-name=value2", req.Header.Get("Cookie"))
+	assert.Equal(t, "custom-name=value2", w.Header().Get("Cookie"))
 }
 
 func TestCookieSessionStore_Create(t *testing.T) {

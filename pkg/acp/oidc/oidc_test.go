@@ -602,6 +602,10 @@ func TestMiddleware_ForwardsCorrectly(t *testing.T) {
 				session.OnUpdateRaw(mock.Anything, mock.Anything, mock.Anything).TypedReturns(nil).Once()
 			}
 
+			if test.wantStatus == http.StatusOK {
+				session.OnRemoveCookieRaw(mock.Anything, mock.Anything).Once()
+			}
+
 			oauth := newOAuthProviderMock(t).
 				OnTokenSourceRaw(mock.Anything).ReturnsFn(func(*oauth2.Token) oauth2.TokenSource {
 				tok := &oauth2.Token{

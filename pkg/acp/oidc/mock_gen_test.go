@@ -462,8 +462,8 @@ func (_c *sessionStoreCreateCall) OnGet(aParam *http.Request) *sessionStoreGetCa
 	return _c.Parent.OnGet(aParam)
 }
 
-func (_c *sessionStoreCreateCall) OnRemoveCookie(aParam *http.Request) *sessionStoreRemoveCookieCall {
-	return _c.Parent.OnRemoveCookie(aParam)
+func (_c *sessionStoreCreateCall) OnRemoveCookie(aParam http.ResponseWriter, bParam *http.Request) *sessionStoreRemoveCookieCall {
+	return _c.Parent.OnRemoveCookie(aParam, bParam)
 }
 
 func (_c *sessionStoreCreateCall) OnUpdate(aParam http.ResponseWriter, bParam *http.Request, cParam SessionData) *sessionStoreUpdateCall {
@@ -482,8 +482,8 @@ func (_c *sessionStoreCreateCall) OnGetRaw(aParam interface{}) *sessionStoreGetC
 	return _c.Parent.OnGetRaw(aParam)
 }
 
-func (_c *sessionStoreCreateCall) OnRemoveCookieRaw(aParam interface{}) *sessionStoreRemoveCookieCall {
-	return _c.Parent.OnRemoveCookieRaw(aParam)
+func (_c *sessionStoreCreateCall) OnRemoveCookieRaw(aParam interface{}, bParam interface{}) *sessionStoreRemoveCookieCall {
+	return _c.Parent.OnRemoveCookieRaw(aParam, bParam)
 }
 
 func (_c *sessionStoreCreateCall) OnUpdateRaw(aParam interface{}, bParam interface{}, cParam interface{}) *sessionStoreUpdateCall {
@@ -586,8 +586,8 @@ func (_c *sessionStoreDeleteCall) OnGet(aParam *http.Request) *sessionStoreGetCa
 	return _c.Parent.OnGet(aParam)
 }
 
-func (_c *sessionStoreDeleteCall) OnRemoveCookie(aParam *http.Request) *sessionStoreRemoveCookieCall {
-	return _c.Parent.OnRemoveCookie(aParam)
+func (_c *sessionStoreDeleteCall) OnRemoveCookie(aParam http.ResponseWriter, bParam *http.Request) *sessionStoreRemoveCookieCall {
+	return _c.Parent.OnRemoveCookie(aParam, bParam)
 }
 
 func (_c *sessionStoreDeleteCall) OnUpdate(aParam http.ResponseWriter, bParam *http.Request, cParam SessionData) *sessionStoreUpdateCall {
@@ -606,8 +606,8 @@ func (_c *sessionStoreDeleteCall) OnGetRaw(aParam interface{}) *sessionStoreGetC
 	return _c.Parent.OnGetRaw(aParam)
 }
 
-func (_c *sessionStoreDeleteCall) OnRemoveCookieRaw(aParam interface{}) *sessionStoreRemoveCookieCall {
-	return _c.Parent.OnRemoveCookieRaw(aParam)
+func (_c *sessionStoreDeleteCall) OnRemoveCookieRaw(aParam interface{}, bParam interface{}) *sessionStoreRemoveCookieCall {
+	return _c.Parent.OnRemoveCookieRaw(aParam, bParam)
 }
 
 func (_c *sessionStoreDeleteCall) OnUpdateRaw(aParam interface{}, bParam interface{}, cParam interface{}) *sessionStoreUpdateCall {
@@ -710,8 +710,8 @@ func (_c *sessionStoreGetCall) OnGet(aParam *http.Request) *sessionStoreGetCall 
 	return _c.Parent.OnGet(aParam)
 }
 
-func (_c *sessionStoreGetCall) OnRemoveCookie(aParam *http.Request) *sessionStoreRemoveCookieCall {
-	return _c.Parent.OnRemoveCookie(aParam)
+func (_c *sessionStoreGetCall) OnRemoveCookie(aParam http.ResponseWriter, bParam *http.Request) *sessionStoreRemoveCookieCall {
+	return _c.Parent.OnRemoveCookie(aParam, bParam)
 }
 
 func (_c *sessionStoreGetCall) OnUpdate(aParam http.ResponseWriter, bParam *http.Request, cParam SessionData) *sessionStoreUpdateCall {
@@ -730,24 +730,24 @@ func (_c *sessionStoreGetCall) OnGetRaw(aParam interface{}) *sessionStoreGetCall
 	return _c.Parent.OnGetRaw(aParam)
 }
 
-func (_c *sessionStoreGetCall) OnRemoveCookieRaw(aParam interface{}) *sessionStoreRemoveCookieCall {
-	return _c.Parent.OnRemoveCookieRaw(aParam)
+func (_c *sessionStoreGetCall) OnRemoveCookieRaw(aParam interface{}, bParam interface{}) *sessionStoreRemoveCookieCall {
+	return _c.Parent.OnRemoveCookieRaw(aParam, bParam)
 }
 
 func (_c *sessionStoreGetCall) OnUpdateRaw(aParam interface{}, bParam interface{}, cParam interface{}) *sessionStoreUpdateCall {
 	return _c.Parent.OnUpdateRaw(aParam, bParam, cParam)
 }
 
-func (_m *sessionStoreMock) RemoveCookie(aParam *http.Request) {
-	_m.Called(aParam)
+func (_m *sessionStoreMock) RemoveCookie(aParam http.ResponseWriter, bParam *http.Request) {
+	_m.Called(aParam, bParam)
 }
 
-func (_m *sessionStoreMock) OnRemoveCookie(aParam *http.Request) *sessionStoreRemoveCookieCall {
-	return &sessionStoreRemoveCookieCall{Call: _m.Mock.On("RemoveCookie", aParam), Parent: _m}
+func (_m *sessionStoreMock) OnRemoveCookie(aParam http.ResponseWriter, bParam *http.Request) *sessionStoreRemoveCookieCall {
+	return &sessionStoreRemoveCookieCall{Call: _m.Mock.On("RemoveCookie", aParam, bParam), Parent: _m}
 }
 
-func (_m *sessionStoreMock) OnRemoveCookieRaw(aParam interface{}) *sessionStoreRemoveCookieCall {
-	return &sessionStoreRemoveCookieCall{Call: _m.Mock.On("RemoveCookie", aParam), Parent: _m}
+func (_m *sessionStoreMock) OnRemoveCookieRaw(aParam interface{}, bParam interface{}) *sessionStoreRemoveCookieCall {
+	return &sessionStoreRemoveCookieCall{Call: _m.Mock.On("RemoveCookie", aParam, bParam), Parent: _m}
 }
 
 type sessionStoreRemoveCookieCall struct {
@@ -795,10 +795,11 @@ func (_c *sessionStoreRemoveCookieCall) Maybe() *sessionStoreRemoveCookieCall {
 	return _c
 }
 
-func (_c *sessionStoreRemoveCookieCall) TypedRun(fn func(*http.Request)) *sessionStoreRemoveCookieCall {
+func (_c *sessionStoreRemoveCookieCall) TypedRun(fn func(http.ResponseWriter, *http.Request)) *sessionStoreRemoveCookieCall {
 	_c.Call = _c.Call.Run(func(args mock.Arguments) {
-		_aParam, _ := args.Get(0).(*http.Request)
-		fn(_aParam)
+		_aParam, _ := args.Get(0).(http.ResponseWriter)
+		_bParam, _ := args.Get(1).(*http.Request)
+		fn(_aParam, _bParam)
 	})
 	return _c
 }
@@ -815,8 +816,8 @@ func (_c *sessionStoreRemoveCookieCall) OnGet(aParam *http.Request) *sessionStor
 	return _c.Parent.OnGet(aParam)
 }
 
-func (_c *sessionStoreRemoveCookieCall) OnRemoveCookie(aParam *http.Request) *sessionStoreRemoveCookieCall {
-	return _c.Parent.OnRemoveCookie(aParam)
+func (_c *sessionStoreRemoveCookieCall) OnRemoveCookie(aParam http.ResponseWriter, bParam *http.Request) *sessionStoreRemoveCookieCall {
+	return _c.Parent.OnRemoveCookie(aParam, bParam)
 }
 
 func (_c *sessionStoreRemoveCookieCall) OnUpdate(aParam http.ResponseWriter, bParam *http.Request, cParam SessionData) *sessionStoreUpdateCall {
@@ -835,8 +836,8 @@ func (_c *sessionStoreRemoveCookieCall) OnGetRaw(aParam interface{}) *sessionSto
 	return _c.Parent.OnGetRaw(aParam)
 }
 
-func (_c *sessionStoreRemoveCookieCall) OnRemoveCookieRaw(aParam interface{}) *sessionStoreRemoveCookieCall {
-	return _c.Parent.OnRemoveCookieRaw(aParam)
+func (_c *sessionStoreRemoveCookieCall) OnRemoveCookieRaw(aParam interface{}, bParam interface{}) *sessionStoreRemoveCookieCall {
+	return _c.Parent.OnRemoveCookieRaw(aParam, bParam)
 }
 
 func (_c *sessionStoreRemoveCookieCall) OnUpdateRaw(aParam interface{}, bParam interface{}, cParam interface{}) *sessionStoreUpdateCall {
@@ -940,8 +941,8 @@ func (_c *sessionStoreUpdateCall) OnGet(aParam *http.Request) *sessionStoreGetCa
 	return _c.Parent.OnGet(aParam)
 }
 
-func (_c *sessionStoreUpdateCall) OnRemoveCookie(aParam *http.Request) *sessionStoreRemoveCookieCall {
-	return _c.Parent.OnRemoveCookie(aParam)
+func (_c *sessionStoreUpdateCall) OnRemoveCookie(aParam http.ResponseWriter, bParam *http.Request) *sessionStoreRemoveCookieCall {
+	return _c.Parent.OnRemoveCookie(aParam, bParam)
 }
 
 func (_c *sessionStoreUpdateCall) OnUpdate(aParam http.ResponseWriter, bParam *http.Request, cParam SessionData) *sessionStoreUpdateCall {
@@ -960,8 +961,8 @@ func (_c *sessionStoreUpdateCall) OnGetRaw(aParam interface{}) *sessionStoreGetC
 	return _c.Parent.OnGetRaw(aParam)
 }
 
-func (_c *sessionStoreUpdateCall) OnRemoveCookieRaw(aParam interface{}) *sessionStoreRemoveCookieCall {
-	return _c.Parent.OnRemoveCookieRaw(aParam)
+func (_c *sessionStoreUpdateCall) OnRemoveCookieRaw(aParam interface{}, bParam interface{}) *sessionStoreRemoveCookieCall {
+	return _c.Parent.OnRemoveCookieRaw(aParam, bParam)
 }
 
 func (_c *sessionStoreUpdateCall) OnUpdateRaw(aParam interface{}, bParam interface{}, cParam interface{}) *sessionStoreUpdateCall {

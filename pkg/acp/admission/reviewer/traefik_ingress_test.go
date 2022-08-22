@@ -379,7 +379,7 @@ func TestTraefikIngress_ReviewAddsAuthentication(t *testing.T) {
 				"custom-annotation": "foobar",
 				"traefik.ingress.kubernetes.io/router.middlewares": "custom-middleware@kubernetescrd,test-zz-my-policy-test@kubernetescrd",
 			},
-			wantAuthResponseHeaders: []string{"fwdHeader", "Set-Cookie"},
+			wantAuthResponseHeaders: []string{"fwdHeader", "Authorization", "Cookie", "Set-Cookie"},
 		},
 	}
 
