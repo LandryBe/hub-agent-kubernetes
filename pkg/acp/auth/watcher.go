@@ -84,22 +84,17 @@ func (w *Watcher) Run(ctx context.Context) {
 				log.Error().Err(err).Msg("Unable to hash")
 			}
 
-			if err == nil && w.previous == hash {
-				w.configsMu.RUnlock()
-				continue
-			}
-			w.previous = hash
-
-			routes, err := buildRoutes(ctx, w.configs)
-			if err != nil {
-				w.configsMu.RUnlock()
-				log.Error().Err(err).Msg("Unable to switch ACP handlers")
-				continue
-			}
 			w.configsMu.RUnlock()
 
+			if err == nil && w.previous == hash {
+				continue
+			}
+
+			w.previous = hash
+
 			log.Debug().Msg("Refreshing ACP handlers")
-			w.switcher.UpdateHandler(routes)
+
+			w.switcher.UpdateHandler(w.buildRoutes(ctx))
 
 		case <-ctx.Done():
 			return
@@ -224,48 +219,61 @@ func (w *Watcher) OnDelete(obj interface{}) {
 	}
 }
 
-func buildRoutes(ctx context.Context, cfgs map[string]*acp.Config) (http.Handler, error) {
+func (w *Watcher) buildRoutes(ctx context.Context) http.Handler {
+	w.configsMu.RLock()
+	defer w.configsMu.RUnlock()
+
 	mux := http.NewServeMux()
 
-	for name, cfg := range cfgs {
-		switch {
-		case cfg.JWT != nil:
-			jwtHandler, err := jwt.NewHandler(cfg.JWT, name)
-			if err != nil {
-				return nil, fmt.Errorf("create %q JWT ACP handler: %w", name, err)
-			}
+	for name, cfg := range w.configs {
+		path := "/" + name
 
-			path := "/" + name
-			log.Debug().Str("acp_name", name).Str("path", path).Msg("Registering JWT ACP handler")
-			mux.Handle(path, jwtHandler)
+		logger := log.With().Str("acp_name", name).Str("acp_type", getACPType(cfg)).Logger()
 
-		case cfg.BasicAuth != nil:
-			h, err := basicauth.NewHandler(cfg.BasicAuth, name)
-			if err != nil {
-				return nil, fmt.Errorf("create %q basic auth ACP handler: %w", name, err)
-			}
-
-			path := "/" + name
-			log.Debug().Str("acp_name", name).Str("path", path).Msg("Registering basic auth ACP handler")
-			mux.Handle(path, h)
-
-		case cfg.OIDC != nil:
-			h, err := oidc.NewHandler(ctx, cfg.OIDC, name)
-			if err != nil {
-				log.Error().Err(err).Msgf("create %q OIDC ACP handler", name)
-				continue
-			}
-
-			path := "/" + name
-			log.Debug().Str("acp_name", name).Str("path", path).Msg("Registering OIDC auth ACP handler")
-			mux.Handle(path, h)
-
-		default:
-			return nil, fmt.Errorf("unknown handler type for ACP %s", name)
+		route, err := buildRoute(ctx, name, cfg)
+		if err != nil {
+			logger.Error().Err(err).Msg("create ACP handler")
+			continue
 		}
+
+		logger.Debug().Msg("Registering ACP handler")
+
+		mux.Handle(path, route)
 	}
 
-	return mux, nil
+	return mux
+}
+
+func buildRoute(ctx context.Context, name string, cfg *acp.Config) (http.Handler, error) {
+	switch {
+	case cfg.JWT != nil:
+		return jwt.NewHandler(cfg.JWT, name)
+
+	case cfg.BasicAuth != nil:
+		return basicauth.NewHandler(cfg.BasicAuth, name)
+
+	case cfg.OIDC != nil:
+		return oidc.NewHandler(ctx, cfg.OIDC, name)
+
+	default:
+		return nil, fmt.Errorf("unknown handler type for ACP %s", name)
+	}
+}
+
+func getACPType(cfg *acp.Config) string {
+	switch {
+	case cfg.JWT != nil:
+		return "JWT"
+
+	case cfg.BasicAuth != nil:
+		return "Basic Auth"
+
+	case cfg.OIDC != nil:
+		return "OIDC"
+
+	default:
+		return "unknown"
+	}
 }
 
 func populateSecrets(config *oidc.Config, secret oidcSecret) error {
