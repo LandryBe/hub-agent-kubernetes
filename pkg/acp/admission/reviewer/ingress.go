@@ -109,7 +109,7 @@ func headerToForward(cfg *acp.Config) ([]string, error) {
 		for headerName := range cfg.OIDC.ForwardHeaders {
 			headerToFwd = append(headerToFwd, headerName)
 		}
-		headerToFwd = append(headerToFwd, "Authorization", "Cookie", "Set-Cookie")
+		headerToFwd = append(headerToFwd, "Authorization", "Cookie")
 
 	default:
 		return nil, errors.New("unsupported ACP type")
