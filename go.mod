@@ -14,6 +14,7 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.7.1
 	github.com/hashicorp/go-version v1.5.0
 	github.com/hashicorp/yamux v0.0.0-20211028200310-0bc27b27de87
+	github.com/mitchellh/hashstructure/v2 v2.0.2
 	github.com/pquerna/cachecontrol v0.1.0
 	github.com/prometheus/client_model v0.2.0
 	github.com/prometheus/common v0.35.0
@@ -57,7 +58,6 @@ require (
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
-	github.com/mitchellh/hashstructure/v2 v2.0.2 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
