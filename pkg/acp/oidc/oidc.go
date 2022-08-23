@@ -269,13 +269,24 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if refreshSession {
+	// Refresh the session is possible only if we can return a redirect to the user.
+	// If we can't, we check the token and continue without update the session user.
+	if refreshSession && h.shouldRedirect(req) {
 		if err = h.session.Update(rw, req, *sess); err != nil {
 			logger.Debug().Err(err).Msg("Unable to refresh the session")
 			http.Error(rw, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 
 			return
 		}
+
+		http.Redirect(
+			rw,
+			req,
+			forwardedURL,
+			http.StatusFound,
+		)
+
+		return
 	}
 
 	claims := make(map[string]interface{})
