@@ -512,13 +512,9 @@ func TestMiddleware_ForwardsCorrectly(t *testing.T) {
 			},
 			expiry:                  time.Now().Add(-1 * time.Minute),
 			idToken:                 jwtToken,
-			wantStatus:              http.StatusOK,
+			wantStatus:              http.StatusFound,
 			wantNextCalled:          true,
 			wantUpdateSessionCalled: true,
-			wantForwardedHeaders: map[string]string{
-				"X-App-Group":   "admin",
-				"Authorization": "Bearer refreshed-token",
-			},
 		},
 		{
 			desc: "forwards call (and header is canonicalized)",

@@ -22,9 +22,9 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"reflect"
 	"sync"
 
+	"github.com/mitchellh/hashstructure/v2"
 	"github.com/rs/zerolog/log"
 	"github.com/traefik/hub-agent-kubernetes/pkg/acp"
 	"github.com/traefik/hub-agent-kubernetes/pkg/acp/basicauth"
@@ -50,10 +50,9 @@ type oidcSecret struct {
 type Watcher struct {
 	configsMu sync.RWMutex
 	configs   map[string]*acp.Config
-	previous  map[string]*acp.Config
+	previous  uint64
 
-	secrets         map[string]oidcSecret
-	previousSecrets map[string]oidcSecret
+	secrets map[string]oidcSecret
 
 	refresh chan struct{}
 
@@ -78,39 +77,60 @@ func (w *Watcher) Run(ctx context.Context) {
 		case <-w.refresh:
 			w.configsMu.RLock()
 
-			if reflect.DeepEqual(w.previous, w.configs) && reflect.DeepEqual(w.secrets, w.previousSecrets) {
+			w.populateSecrets()
+
+			hash, err := hashstructure.Hash(w.configs, hashstructure.FormatV2, nil)
+			if err != nil {
+				log.Error().Err(err).Msg("Unable to hash")
+			}
+
+			if err == nil && w.previous == hash {
 				w.configsMu.RUnlock()
 				continue
 			}
+			w.previous = hash
 
-			cfgs := make(map[string]*acp.Config, len(w.configs))
-			for k, v := range w.configs {
-				cfgs[k] = v
-			}
-
-			w.previous = cfgs
-
-			previousSecrets := make(map[string]oidcSecret, len(w.secrets))
-			for k, v := range w.secrets {
-				previousSecrets[k] = v
-			}
-
-			w.previousSecrets = previousSecrets
-
-			w.configsMu.RUnlock()
-
-			log.Debug().Msg("Refreshing ACP handlers")
-
-			routes, err := buildRoutes(ctx, cfgs, w.secrets)
+			routes, err := buildRoutes(ctx, w.configs)
 			if err != nil {
+				w.configsMu.RUnlock()
 				log.Error().Err(err).Msg("Unable to switch ACP handlers")
 				continue
 			}
+			w.configsMu.RUnlock()
 
+			log.Debug().Msg("Refreshing ACP handlers")
 			w.switcher.UpdateHandler(routes)
 
 		case <-ctx.Done():
 			return
+		}
+	}
+}
+
+func (w *Watcher) populateSecrets() {
+	for name, config := range w.configs {
+		logger := log.With().Str("acp_name", name).Logger()
+
+		if config.OIDC == nil {
+			continue
+		}
+
+		if config.OIDC.Secret == nil {
+			logger.Error().Msg("Secret is missing")
+			continue
+		}
+
+		logger = logger.With().Str("secret_namespace", config.OIDC.Secret.Namespace).
+			Str("secret_name", config.OIDC.Secret.Name).Logger()
+
+		secret, ok := w.secrets[config.OIDC.Secret.Namespace+"@"+config.OIDC.Secret.Name]
+		if !ok {
+			logger.Error().Msg("Secret is missing")
+			continue
+		}
+
+		if err := populateSecrets(config.OIDC, secret); err != nil {
+			logger.Error().Err(err).Msg("error while populating secrets")
 		}
 	}
 }
@@ -204,7 +224,7 @@ func (w *Watcher) OnDelete(obj interface{}) {
 	}
 }
 
-func buildRoutes(ctx context.Context, cfgs map[string]*acp.Config, secrets map[string]oidcSecret) (http.Handler, error) {
+func buildRoutes(ctx context.Context, cfgs map[string]*acp.Config) (http.Handler, error) {
 	mux := http.NewServeMux()
 
 	for name, cfg := range cfgs {
@@ -230,25 +250,6 @@ func buildRoutes(ctx context.Context, cfgs map[string]*acp.Config, secrets map[s
 			mux.Handle(path, h)
 
 		case cfg.OIDC != nil:
-			if cfg.OIDC.Secret != nil {
-				secret, ok := secrets[cfg.OIDC.Secret.Namespace+"@"+cfg.OIDC.Secret.Name]
-				if !ok {
-					log.Error().Str("acp_name", name).
-						Str("secret_namespace", cfg.OIDC.Secret.Namespace).
-						Str("secret_name", cfg.OIDC.Secret.Name).
-						Msg("Secret is missing")
-					continue
-				}
-
-				err := populateSecrets(cfg.OIDC, secret)
-				if err != nil {
-					log.Error().Str("acp_name", name).
-						Str("secret_namespace", cfg.OIDC.Secret.Namespace).
-						Str("secret_name", cfg.OIDC.Secret.Name).
-						Err(err).Msg("error while populating secrets")
-				}
-			}
-
 			h, err := oidc.NewHandler(ctx, cfg.OIDC, name)
 			if err != nil {
 				log.Error().Err(err).Msgf("create %q OIDC ACP handler", name)

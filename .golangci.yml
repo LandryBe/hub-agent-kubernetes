@@ -214,7 +214,7 @@ issues:
         - funlen
     # Reducing cyclomatic complexity would reduce readability.
     - path: pkg/acp/oidc/oidc.go
-      text: "cyclomatic complexity 20 of func `(.*).ServeHTTP` is high"
+      text: "cyclomatic complexity 21 of func `(.*).ServeHTTP` is high"
       linters:
         - gocyclo
     - path: pkg/acp/oidc/oidc_test.go
