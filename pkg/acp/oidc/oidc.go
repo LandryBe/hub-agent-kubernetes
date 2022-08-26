@@ -407,62 +407,25 @@ func (h *Handler) redirectToProvider(rw http.ResponseWriter, req *http.Request, 
 	// makes the browser send an /authorize to the auth server.
 	// spec: section 3.1.2.1.
 
-	/*
+	if req.Header.Get("From") == "nginx" {
+		rw.Header().Add("url_provider", h.oauth.AuthCodeURL(
+			state.RedirectID,
+			opts...,
+		)+"&fix=1") // nginx quick fix
+		rw.WriteHeader(http.StatusUnauthorized)
 
-		---
-		apiVersion: networking.k8s.io/v1
-		kind: Ingress
-		metadata:
-		  name: app-nginx
-		  namespace: whoami
-		  annotations:
-		    nginx.ingress.kubernetes.io/auth-url: "http://hub-agent-auth-server.hub-agent.svc.cluster.local/my-acp"
-		    nginx.ingress.kubernetes.io/auth-signin: $url_provider
-		    nginx.ingress.kubernetes.io/auth-snippet: |
-		          proxy_set_header From nginx;
-		          proxy_set_header X-Forwarded-Uri $request_uri;
-		          proxy_set_header X-Forwarded-Host $host;
-		          proxy_set_header X-Forwarded-Proto $scheme;
-		          proxy_set_header X-Forwarded-Method $request_method;
-		    nginx.ingress.kubernetes.io/configuration-snippet: |
-		          auth_request_set $url_provider $upstream_http_url_provider;
-		    nginx.ingress.kubernetes.io/server-snippet: |
-		          location /callback {
-		            proxy_pass http://hub-agent-auth-server.hub-agent.svc.cluster.local/my-acp;
-		            proxy_set_header X-Forwarded-Uri $request_uri;
-		            proxy_set_header X-Forwarded-Host $host;
-		            proxy_set_header X-Forwarded-Proto $scheme;
-		          }
-		spec:
-		  ingressClassName: nginx
-		  rules:
-		    - host: nginx.docker.localhost
-		      http:
-		        paths:
-		          - path: /
-		            pathType: Prefix
-		            backend:
-		              service:
-		                name: whoami
-		                port:
-		                  number: 80
-	*/
+		return
+	}
 
-	rw.Header().Add("url_provider", h.oauth.AuthCodeURL(
-		state.RedirectID,
-		opts...,
-	)+"&fix=1")
-	rw.WriteHeader(http.StatusUnauthorized)
-
-	//http.Redirect(
-	//	rw,
-	//	req,
-	//	h.oauth.AuthCodeURL(
-	//		state.RedirectID,
-	//		opts...,
-	//	),
-	//	http.StatusFound,
-	//)
+	http.Redirect(
+		rw,
+		req,
+		h.oauth.AuthCodeURL(
+			state.RedirectID,
+			opts...,
+		),
+		http.StatusFound,
+	)
 }
 
 func (h *Handler) handleProviderCallback(rw http.ResponseWriter, req *http.Request, redirectURL string) {

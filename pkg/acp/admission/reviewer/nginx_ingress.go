@@ -81,24 +81,6 @@ func (r NginxIngress) CanReview(ar admv1.AdmissionReview) (bool, error) {
 	return isNginx(defaultCtrlr), nil
 }
 
-// nginx.ingress.kubernetes.io/auth-url: "http://hub-agent-auth-server.hub-agent.svc.cluster.local/my-acp"
-// nginx.ingress.kubernetes.io/auth-signin: $url_provider
-// nginx.ingress.kubernetes.io/auth-snippet: |
-// proxy_set_header From nginx;
-// proxy_set_header X-Forwarded-Uri $request_uri;
-// proxy_set_header X-Forwarded-Host $host;
-// proxy_set_header X-Forwarded-Proto $scheme;
-// proxy_set_header X-Forwarded-Method $request_method;
-// nginx.ingress.kubernetes.io/configuration-snippet: |
-// auth_request_set $url_provider $upstream_http_url_provider;
-// nginx.ingress.kubernetes.io/server-snippet: |
-// location /callback {
-// proxy_pass http://hub-agent-auth-server.hub-agent.svc.cluster.local/my-acp;
-// proxy_set_header X-Forwarded-Uri $request_uri;
-// proxy_set_header X-Forwarded-Host $host;
-// proxy_set_header X-Forwarded-Proto $scheme;
-// }
-
 // Review reviews the given admission review request and optionally returns the required patch.
 func (r NginxIngress) Review(ctx context.Context, ar admv1.AdmissionReview) (map[string]interface{}, error) {
 	l := log.Ctx(ctx).With().Str("reviewer", "NginxIngress").Logger()
@@ -189,6 +171,12 @@ func clearEmptyAnnotations(anno map[string]string) {
 	}
 	if anno["nginx.ingress.kubernetes.io/configuration-snippet"] == "" {
 		delete(anno, "nginx.ingress.kubernetes.io/configuration-snippet")
+	}
+	if anno["nginx.ingress.kubernetes.io/auth-signin"] == "" {
+		delete(anno, "nginx.ingress.kubernetes.io/auth-signin")
+	}
+	if anno["nginx.ingress.kubernetes.io/auth-snippet"] == "" {
+		delete(anno, "nginx.ingress.kubernetes.io/auth-snippet")
 	}
 }
 

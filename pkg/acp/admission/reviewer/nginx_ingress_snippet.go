@@ -33,18 +33,18 @@ func genSnippets(polName string, polCfg *acp.Config, agentAddr string) (nginxSni
 
 	nginxSnippet := nginxSnippets{
 		AuthURL:              fmt.Sprintf("%s/%s", agentAddr, polName),
-		ConfigurationSnippet: wrapHubSnippet(locSnip),
+		ConfigurationSnippet: locSnip,
 	}
 
 	if polCfg.OIDC != nil {
 		nginxSnippet.AuthSignin = "$url_provider"
-		nginxSnippet.AuthSnippet = `
+		nginxSnippet.AuthSnippet = wrapHubSnippet(`
 proxy_set_header From nginx;
 proxy_set_header X-Forwarded-Uri $request_uri;
 proxy_set_header X-Forwarded-Host $host;
 proxy_set_header X-Forwarded-Proto $scheme;
-proxy_set_header X-Forwarded-Method $request_method;`
-		nginxSnippet.ConfigurationSnippet = "auth_request_set $url_provider $upstream_http_url_provider;"
+proxy_set_header X-Forwarded-Method $request_method;`)
+		nginxSnippet.ConfigurationSnippet += "auth_request_set $url_provider $upstream_http_url_provider;"
 
 		url, err := url.Parse(polCfg.OIDC.RedirectURL)
 		if err != nil {
@@ -60,10 +60,10 @@ proxy_set_header X-Forwarded-Method $request_method;`
 			redirectURL = "/" + redirectURL
 		}
 
-		nginxSnippet.ServerSnippet = fmt.Sprintf("location %s { proxy_pass %s/%s; proxy_set_header X-Forwarded-Uri $request_uri; proxy_set_header X-Forwarded-Host $host; proxy_set_header X-Forwarded-Proto $scheme; }", redirectURL, agentAddr, polName)
+		nginxSnippet.ServerSnippet = wrapHubSnippet(fmt.Sprintf("location %s { proxy_pass %s/%s; proxy_set_header X-Forwarded-Uri $request_uri; proxy_set_header X-Forwarded-Host $host; proxy_set_header X-Forwarded-Proto $scheme; }", redirectURL, agentAddr, polName))
 	}
 
-	fmt.Printf("%+v\n", nginxSnippet)
+	nginxSnippet.ConfigurationSnippet = wrapHubSnippet(nginxSnippet.ConfigurationSnippet)
 
 	return nginxSnippet, nil
 }
@@ -89,7 +89,7 @@ func wrapHubSnippet(s string) string {
 func mergeSnippets(snippets nginxSnippets, anno map[string]string) nginxSnippets {
 	return nginxSnippets{
 		AuthURL:              snippets.AuthURL,
-		AuthSignin:           mergeSnippet(anno["nginx.ingress.kubernetes.io/auth-signin"], snippets.AuthSignin),
+		AuthSignin:           snippets.AuthSignin,
 		AuthSnippet:          mergeSnippet(anno["nginx.ingress.kubernetes.io/auth-snippet"], snippets.AuthSnippet),
 		ConfigurationSnippet: mergeSnippet(anno["nginx.ingress.kubernetes.io/configuration-snippet"], snippets.ConfigurationSnippet),
 		ServerSnippet:        mergeSnippet(anno["nginx.ingress.kubernetes.io/server-snippet"], snippets.ServerSnippet),
@@ -107,5 +107,6 @@ func mergeSnippet(oldSnippet, hubSnippet string) string {
 	if oldSnippet != "" && hubSnippet != "" {
 		return oldSnippet + "\n" + hubSnippet
 	}
+
 	return oldSnippet + hubSnippet
 }
