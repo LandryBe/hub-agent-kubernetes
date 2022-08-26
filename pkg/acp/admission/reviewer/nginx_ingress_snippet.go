@@ -2,6 +2,7 @@ package reviewer
 
 import (
 	"fmt"
+	"net/url"
 	"regexp"
 	"strings"
 
@@ -15,11 +16,11 @@ const (
 
 type nginxSnippets struct {
 	// Community snippets:
+	AuthSignin           string
+	AuthSnippet          string
 	AuthURL              string
 	ConfigurationSnippet string
-	// Official snippets:
-	LocationSnippets string
-	ServerSnippets   string
+	ServerSnippet        string
 }
 
 func genSnippets(polName string, polCfg *acp.Config, agentAddr string) (nginxSnippets, error) {
@@ -30,12 +31,41 @@ func genSnippets(polName string, polCfg *acp.Config, agentAddr string) (nginxSni
 
 	locSnip := generateLocationSnippet(headerToFwd)
 
-	return nginxSnippets{
+	nginxSnippet := nginxSnippets{
 		AuthURL:              fmt.Sprintf("%s/%s", agentAddr, polName),
 		ConfigurationSnippet: wrapHubSnippet(locSnip),
-		LocationSnippets:     wrapHubSnippet(fmt.Sprintf("auth_request /auth;\n%s", locSnip)),
-		ServerSnippets:       wrapHubSnippet(fmt.Sprintf("location /auth {proxy_pass %s/%s;}", agentAddr, polName)),
-	}, nil
+	}
+
+	if polCfg.OIDC != nil {
+		nginxSnippet.AuthSignin = "$url_provider"
+		nginxSnippet.AuthSnippet = `
+proxy_set_header From nginx;
+proxy_set_header X-Forwarded-Uri $request_uri;
+proxy_set_header X-Forwarded-Host $host;
+proxy_set_header X-Forwarded-Proto $scheme;
+proxy_set_header X-Forwarded-Method $request_method;`
+		nginxSnippet.ConfigurationSnippet = "auth_request_set $url_provider $upstream_http_url_provider;"
+
+		url, err := url.Parse(polCfg.OIDC.RedirectURL)
+		if err != nil {
+			return nginxSnippets{}, fmt.Errorf("parse redirect url: %w", err)
+		}
+
+		var redirectURL = "/callback"
+		if url.Path != "" {
+			redirectURL = polCfg.OIDC.RedirectURL
+		}
+
+		if redirectURL[0] != '/' {
+			redirectURL = "/" + redirectURL
+		}
+
+		nginxSnippet.ServerSnippet = fmt.Sprintf("location %s { proxy_pass %s/%s; proxy_set_header X-Forwarded-Uri $request_uri; proxy_set_header X-Forwarded-Host $host; proxy_set_header X-Forwarded-Proto $scheme; }", redirectURL, agentAddr, polName)
+	}
+
+	fmt.Printf("%+v\n", nginxSnippet)
+
+	return nginxSnippet, nil
 }
 
 func generateLocationSnippet(headerToForward []string) string {
@@ -52,15 +82,17 @@ func wrapHubSnippet(s string) string {
 	if s == "" {
 		return ""
 	}
+
 	return fmt.Sprintf("%s\n%s\n%s", hubSnippetTokenStart, strings.TrimSpace(s), hubSnippetTokenEnd)
 }
 
 func mergeSnippets(snippets nginxSnippets, anno map[string]string) nginxSnippets {
 	return nginxSnippets{
 		AuthURL:              snippets.AuthURL,
+		AuthSignin:           mergeSnippet(anno["nginx.ingress.kubernetes.io/auth-signin"], snippets.AuthSignin),
+		AuthSnippet:          mergeSnippet(anno["nginx.ingress.kubernetes.io/auth-snippet"], snippets.AuthSnippet),
 		ConfigurationSnippet: mergeSnippet(anno["nginx.ingress.kubernetes.io/configuration-snippet"], snippets.ConfigurationSnippet),
-		LocationSnippets:     mergeSnippet(anno["nginx.org/location-snippets"], snippets.LocationSnippets),
-		ServerSnippets:       mergeSnippet(anno["nginx.org/server-snippets"], snippets.ServerSnippets),
+		ServerSnippet:        mergeSnippet(anno["nginx.ingress.kubernetes.io/server-snippet"], snippets.ServerSnippet),
 	}
 }
 
