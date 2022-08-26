@@ -181,6 +181,12 @@ func TestTraefikIngress_CanReviewChecksIngressClass(t *testing.T) {
 			canReviewErr: assert.NoError,
 		},
 		{
+			desc:         "can't review if using another annotation",
+			annotation:   "nginx",
+			canReview:    assert.False,
+			canReviewErr: assert.NoError,
+		},
+		{
 			desc:       "can review if annotation is correct",
 			annotation: "traefik",
 			ingressClassesMock: func(t *testing.T) IngressClasses {

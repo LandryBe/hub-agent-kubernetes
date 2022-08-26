@@ -58,25 +58,21 @@ func (r TraefikIngress) CanReview(ar admv1.AdmissionReview) (bool, error) {
 	if ar.Request.Operation == admv1.Delete {
 		obj = ar.Request.OldObject.Raw
 	}
+
 	ingClassName, ingClassAnno, err := parseIngressClass(obj)
 	if err != nil {
 		return false, fmt.Errorf("parse raw ingress class: %w", err)
 	}
 
-	defaultCtrlr, err := r.ingressClasses.GetDefaultController()
-	if err != nil {
-		return false, fmt.Errorf("get default ingress class controller: %w", err)
-	}
-
-	var ctrlr string
-	switch {
-	case ingClassName != "":
-		ctrlr, err = r.ingressClasses.GetController(ingClassName)
+	if ingClassName != "" {
+		ctrlr, err := r.ingressClasses.GetController(ingClassName)
 		if err != nil {
 			return false, fmt.Errorf("get ingress class controller from ingress class name: %w", err)
 		}
+
 		return isTraefik(ctrlr), nil
-	case ingClassAnno != "":
+	}
+	if ingClassAnno != "" {
 		if ingClassAnno == defaultAnnotationTraefik {
 			return true, nil
 		}
@@ -87,14 +83,20 @@ func (r TraefikIngress) CanReview(ar admv1.AdmissionReview) (bool, error) {
 			return false, nil
 		}
 
-		ctrlr, err = r.ingressClasses.GetController(ingClassAnno)
+		ctrlr, err := r.ingressClasses.GetController(ingClassAnno)
 		if err != nil {
 			return false, fmt.Errorf("get ingress class controller from annotation: %w", err)
 		}
+
 		return isTraefik(ctrlr), nil
-	default:
-		return isTraefik(defaultCtrlr), nil
 	}
+
+	defaultCtrlr, err := r.ingressClasses.GetDefaultController()
+	if err != nil {
+		return false, fmt.Errorf("get default ingress class controller: %w", err)
+	}
+
+	return isTraefik(defaultCtrlr), nil
 }
 
 // Review reviews the given admission review request and optionally returns the required patch.
