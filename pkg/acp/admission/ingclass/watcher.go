@@ -42,7 +42,6 @@ const annotationDefaultIngressClass = "ingressclass.kubernetes.io/is-default-cla
 // Supported ingress controller types.
 const (
 	ControllerTypeNginxCommunity = "k8s.io/ingress-nginx"
-	ControllerTypeNginxOfficial  = "nginx.org/ingress-controller"
 	ControllerTypeTraefik        = "traefik.io/ingress-controller"
 )
 

@@ -181,5 +181,5 @@ func clearEmptyAnnotations(anno map[string]string) {
 }
 
 func isNginx(ctrlr string) bool {
-	return ctrlr == ingclass.ControllerTypeNginxOfficial || ctrlr == ingclass.ControllerTypeNginxCommunity
+	return ctrlr == ingclass.ControllerTypeNginxCommunity
 }
