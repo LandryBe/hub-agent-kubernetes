@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	hubSnippetTokenStart = "##hub-snippet-start"
-	hubSnippetTokenEnd   = "##hub-snippet-end"
+	hubSnippetTokenStart = "##hub-snippet-start" //nolint:gosec // This is not hardcoded credentials.
+	hubSnippetTokenEnd   = "##hub-snippet-end"   //nolint:gosec // This is not hardcoded credentials.
 
 	authURL              = "nginx.ingress.kubernetes.io/auth-url"
 	authSignin           = "nginx.ingress.kubernetes.io/auth-signin"

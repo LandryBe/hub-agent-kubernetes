@@ -3,16 +3,16 @@ package reviewer
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/traefik/hub-agent-kubernetes/pkg/acp"
 	"github.com/traefik/hub-agent-kubernetes/pkg/acp/admission/ingclass"
 	"github.com/traefik/hub-agent-kubernetes/pkg/acp/basicauth"
-	"github.com/traefik/hub-agent-kubernetes/pkg/acp/digestauth"
 	"github.com/traefik/hub-agent-kubernetes/pkg/acp/jwt"
+	"github.com/traefik/hub-agent-kubernetes/pkg/acp/oidc"
 	admv1 "k8s.io/api/admission/v1"
 	netv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -20,12 +20,6 @@ import (
 )
 
 func TestNginxIngress_CanReviewChecksKind(t *testing.T) {
-	i := ingressClassesMock{
-		getDefaultControllerFunc: func() (string, error) {
-			return ingclass.ControllerTypeNginxOfficial, nil
-		},
-	}
-
 	tests := []struct {
 		desc string
 		kind metav1.GroupVersionKind
@@ -110,10 +104,10 @@ func TestNginxIngress_CanReviewChecksKind(t *testing.T) {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Parallel()
 
-			policies := func(canonicalName string) *acp.Config {
-				return nil
-			}
-			review := NewNginxIngress("", i, policyGetterMock(policies))
+			ic := newIngressClassesMock(t).
+				OnGetDefaultController().TypedReturns(ingclass.ControllerTypeNginxCommunity, nil).Maybe().
+				Parent
+			review := NewNginxIngress("", ic, nil)
 
 			var ing netv1.Ingress
 			b, err := json.Marshal(ing)
@@ -137,73 +131,38 @@ func TestNginxIngress_CanReviewChecksKind(t *testing.T) {
 
 func TestNginxIngress_CanReviewChecksIngressClass(t *testing.T) {
 	tests := []struct {
-		desc                   string
-		annotation             string
-		spec                   string
-		wrongDefaultController bool
-		canReview              bool
-		canReviewErr           assert.ErrorAssertionFunc
+		desc              string
+		annotation        string
+		spec              string
+		defaultController string
+		canReview         bool
+		canReviewErr      assert.ErrorAssertionFunc
 	}{
 		{
-			desc:         "can review a valid resource",
-			canReview:    true,
-			canReviewErr: assert.NoError,
+			desc:              "can review a valid resource",
+			defaultController: ingclass.ControllerTypeNginxCommunity,
+			canReview:         true,
+			canReviewErr:      assert.NoError,
 		},
 		{
-			desc:                   "can't review if the default controller is not of the correct type",
-			wrongDefaultController: true,
-			canReview:              false,
-			canReviewErr:           assert.NoError,
+			desc:              "can't review if the default controller is not of the correct type",
+			defaultController: "none",
+			canReview:         false,
+			canReviewErr:      assert.NoError,
 		},
 		{
-			desc:         "can review if annotation is correct",
-			annotation:   "nginx",
-			canReview:    true,
-			canReviewErr: assert.NoError,
+			desc:              "can't review if using another annotation",
+			annotation:        "traefik",
+			defaultController: ingclass.ControllerTypeNginxCommunity,
+			canReview:         false,
+			canReviewErr:      assert.NoError,
 		},
 		{
-			desc:         "can review if using a custom ingress class (annotation)",
-			annotation:   "custom-nginx-ingress-class",
-			canReview:    true,
-			canReviewErr: assert.NoError,
-		},
-		{
-			desc:         "can't review if using another annotation",
-			annotation:   "traefik",
-			canReview:    false,
-			canReviewErr: assert.NoError,
-		},
-		{
-			desc:         "can review if using a custom ingress class (spec)",
-			spec:         "custom-nginx-ingress-class",
-			canReview:    true,
-			canReviewErr: assert.NoError,
-		},
-		{
-			desc:         "can review if using a custom ingress class with nginx community value (spec)",
-			spec:         "custom-nginx-community-ingress-class",
-			canReview:    true,
-			canReviewErr: assert.NoError,
-		},
-		{
-			desc:         "can't review if using another controller",
-			spec:         "nginx",
-			canReview:    false,
-			canReviewErr: assert.Error,
-		},
-		{
-			desc:         "spec takes priority over ingAnnotation#1",
-			annotation:   "nginx",
-			spec:         "custom-nginx-ingress-class",
-			canReview:    true,
-			canReviewErr: assert.NoError,
-		},
-		{
-			desc:         "spec takes priority over ingAnnotation#2",
-			annotation:   "nginx",
-			spec:         "nginx",
-			canReview:    false,
-			canReviewErr: assert.Error,
+			desc:              "can review if using a custom ingress class with nginx community value (spec)",
+			spec:              "custom-nginx-community-ingress-class",
+			defaultController: ingclass.ControllerTypeNginxCommunity,
+			canReview:         true,
+			canReviewErr:      assert.NoError,
 		},
 	}
 
@@ -212,28 +171,12 @@ func TestNginxIngress_CanReviewChecksIngressClass(t *testing.T) {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Parallel()
 
-			i := ingressClassesMock{
-				getControllerFunc: func(name string) (string, error) {
-					if name == "custom-nginx-ingress-class" {
-						return ingclass.ControllerTypeNginxOfficial, nil
-					}
-					if name == "custom-nginx-community-ingress-class" {
-						return ingclass.ControllerTypeNginxCommunity, nil
-					}
-					return "", errors.New("nope")
-				},
-				getDefaultControllerFunc: func() (string, error) {
-					if test.wrongDefaultController {
-						return "nope", nil
-					}
-					return ingclass.ControllerTypeNginxOfficial, nil
-				},
-			}
+			i := newIngressClassesMock(t).
+				OnGetController("custom-nginx-community-ingress-class").TypedReturns(ingclass.ControllerTypeNginxCommunity, nil).Maybe().
+				OnGetDefaultController().TypedReturns(test.defaultController, nil).Maybe().
+				Parent
 
-			policies := func(canonicalName string) *acp.Config {
-				return nil
-			}
-			review := NewNginxIngress("", i, policyGetterMock(policies))
+			review := NewNginxIngress("", i, nil)
 
 			ing := netv1.Ingress{
 				ObjectMeta: metav1.ObjectMeta{
@@ -269,14 +212,6 @@ func TestNginxIngress_CanReviewChecksIngressClass(t *testing.T) {
 	}
 }
 
-func TestNginxIngress_HandleACPName(t *testing.T) {
-	factory := func(policies PolicyGetter) reviewer {
-		return NewNginxIngress("", ingressClassesMock{}, policies)
-	}
-
-	ingressHandleACPName(t, factory)
-}
-
 func TestNginxIngress_Review(t *testing.T) {
 	tests := []struct {
 		desc            string
@@ -296,14 +231,12 @@ func TestNginxIngress_Review(t *testing.T) {
 				},
 			},
 			ingAnnotations: map[string]string{
-				"hub.traefik.io/access-control-policy": "my-policy@test",
+				"hub.traefik.io/access-control-policy": "my-policy",
 				"custom-annotation":                    "foobar",
 			},
 			wantPatch: map[string]string{
-				"hub.traefik.io/access-control-policy":              "my-policy@test",
-				"nginx.org/server-snippets":                         "##hub-snippet-start\nlocation /auth {proxy_pass http://hub-agent.default.svc.cluster.local/my-policy@test;}\n##hub-snippet-end",
-				"nginx.org/location-snippets":                       "##hub-snippet-start\nauth_request /auth;\nauth_request_set $value_0 $upstream_http_X_Header; proxy_set_header X-Header $value_0;\n##hub-snippet-end",
-				"nginx.ingress.kubernetes.io/auth-url":              "http://hub-agent.default.svc.cluster.local/my-policy@test",
+				"hub.traefik.io/access-control-policy":              "my-policy",
+				"nginx.ingress.kubernetes.io/auth-url":              "http://hub-agent.default.svc.cluster.local/my-policy",
 				"nginx.ingress.kubernetes.io/configuration-snippet": "##hub-snippet-start\nauth_request_set $value_0 $upstream_http_X_Header; proxy_set_header X-Header $value_0;\n##hub-snippet-end",
 				"custom-annotation":                                 "foobar",
 			},
@@ -316,14 +249,12 @@ func TestNginxIngress_Review(t *testing.T) {
 				},
 			},
 			ingAnnotations: map[string]string{
-				"hub.traefik.io/access-control-policy": "my-policy@test",
+				"hub.traefik.io/access-control-policy": "my-policy",
 				"custom-annotation":                    "foobar",
 			},
 			wantPatch: map[string]string{
-				"hub.traefik.io/access-control-policy":              "my-policy@test",
-				"nginx.org/server-snippets":                         "##hub-snippet-start\nlocation /auth {proxy_pass http://hub-agent.default.svc.cluster.local/my-policy@test;}\n##hub-snippet-end",
-				"nginx.org/location-snippets":                       "##hub-snippet-start\nauth_request /auth;\nauth_request_set $value_0 $upstream_http_Authorization; proxy_set_header Authorization $value_0;\n##hub-snippet-end",
-				"nginx.ingress.kubernetes.io/auth-url":              "http://hub-agent.default.svc.cluster.local/my-policy@test",
+				"hub.traefik.io/access-control-policy":              "my-policy",
+				"nginx.ingress.kubernetes.io/auth-url":              "http://hub-agent.default.svc.cluster.local/my-policy",
 				"nginx.ingress.kubernetes.io/configuration-snippet": "##hub-snippet-start\nauth_request_set $value_0 $upstream_http_Authorization; proxy_set_header Authorization $value_0;\n##hub-snippet-end",
 				"custom-annotation":                                 "foobar",
 			},
@@ -336,22 +267,19 @@ func TestNginxIngress_Review(t *testing.T) {
 				},
 			},
 			prevAnnotations: map[string]string{
-				"hub.traefik.io/access-control-policy":              "my-policy@test",
+				"hub.traefik.io/access-control-policy":              "my-policy",
 				"custom-annotation":                                 "foobar",
-				"nginx.org/server-snippets":                         "##hub-snippet-start\nlocation /auth {proxy_pass http://hub-agent.default.svc.cluster.local/my-policy@test;}\n##hub-snippet-end",
-				"nginx.org/location-snippets":                       "##hub-snippet-start\nauth_request /auth;auth_request_set $value_0 $upstream_http_Authorization;proxy_set_header Authorization $value_0;\n##hub-snippet-end",
-				"nginx.ingress.kubernetes.io/auth-url":              "http://hub-agent.default.svc.cluster.local/my-policy@test",
+				"nginx.ingress.kubernetes.io/auth-url":              "http://hub-agent.default.svc.cluster.local/my-policy",
 				"nginx.ingress.kubernetes.io/configuration-snippet": "##hub-snippet-start\nauth_request_set $value_0 $upstream_http_Authorization;proxy_set_header Authorization $value_0;\n##hub-snippet-end",
 			},
 			ingAnnotations: map[string]string{
 				"custom-annotation":                                 "foobar",
-				"nginx.org/server-snippets":                         "##hub-snippet-start\nlocation /auth {proxy_pass http://hub-agent.default.svc.cluster.local/my-policy@test;}\n##hub-snippet-end",
-				"nginx.org/location-snippets":                       "##hub-snippet-start\nauth_request /auth;auth_request_set $value_0 $upstream_http_Authorization;proxy_set_header Authorization $value_0;\n##hub-snippet-end",
-				"nginx.ingress.kubernetes.io/auth-url":              "http://hub-agent.default.svc.cluster.local/my-policy@test",
+				"nginx.ingress.kubernetes.io/auth-url":              "http://hub-agent.default.svc.cluster.local/my-policy",
 				"nginx.ingress.kubernetes.io/configuration-snippet": "##hub-snippet-start\nauth_request_set $value_0 $upstream_http_Authorization;proxy_set_header Authorization $value_0;\n##hub-snippet-end",
 			},
 			wantPatch: map[string]string{
-				"custom-annotation": "foobar",
+				"custom-annotation":                    "foobar",
+				"nginx.ingress.kubernetes.io/auth-url": "http://hub-agent.default.svc.cluster.local/my-policy",
 			},
 		},
 		{
@@ -364,9 +292,7 @@ func TestNginxIngress_Review(t *testing.T) {
 			ingAnnotations: map[string]string{
 				"hub.traefik.io/access-control-policy":              "my-policy",
 				"custom-annotation":                                 "foobar",
-				"nginx.org/server-snippets":                         "##hub-snippet-start\nlocation /auth {proxy_pass http://hub-agent.default.svc.cluster.local/my-policy@test;}\n##hub-snippet-end",
-				"nginx.org/location-snippets":                       "##hub-snippet-start\nauth_request /auth;\nauth_request_set $value_0 $upstream_http_Authorization; proxy_set_header Authorization $value_0;\n##hub-snippet-end",
-				"nginx.ingress.kubernetes.io/auth-url":              "http://hub-agent.default.svc.cluster.local/my-policy@test",
+				"nginx.ingress.kubernetes.io/auth-url":              "http://hub-agent.default.svc.cluster.local/my-policy",
 				"nginx.ingress.kubernetes.io/configuration-snippet": "##hub-snippet-start\nauth_request_set $value_0 $upstream_http_Authorization; proxy_set_header Authorization $value_0;\n##hub-snippet-end",
 			},
 			noPatch: true,
@@ -382,15 +308,11 @@ func TestNginxIngress_Review(t *testing.T) {
 				"custom-annotation":                                 "foobar",
 				"hub.traefik.io/access-control-policy":              "my-policy",
 				"nginx.ingress.kubernetes.io/configuration-snippet": "# Stuff before.",
-				"nginx.org/location-snippets":                       "# Stuff before.",
-				"nginx.org/server-snippets":                         "# Stuff before.",
 			},
 			wantPatch: map[string]string{
 				"custom-annotation":                                 "foobar",
 				"hub.traefik.io/access-control-policy":              "my-policy",
-				"nginx.org/server-snippets":                         "# Stuff before.\n##hub-snippet-start\nlocation /auth {proxy_pass http://hub-agent.default.svc.cluster.local/my-policy@test;}\n##hub-snippet-end",
-				"nginx.org/location-snippets":                       "# Stuff before.\n##hub-snippet-start\nauth_request /auth;\n##hub-snippet-end",
-				"nginx.ingress.kubernetes.io/auth-url":              "http://hub-agent.default.svc.cluster.local/my-policy@test",
+				"nginx.ingress.kubernetes.io/auth-url":              "http://hub-agent.default.svc.cluster.local/my-policy",
 				"nginx.ingress.kubernetes.io/configuration-snippet": "# Stuff before.",
 			},
 		},
@@ -404,17 +326,13 @@ func TestNginxIngress_Review(t *testing.T) {
 			ingAnnotations: map[string]string{
 				"hub.traefik.io/access-control-policy":              "my-policy",
 				"custom-annotation":                                 "foobar",
-				"nginx.org/server-snippets":                         "# Stuff before.\n##hub-snippet-start\nlocation /auth {proxy_pass http://hub-agent.default.svc.cluster.local/my-bad-policy@test;}\n##hub-snippet-end\n# Stuff after.",
-				"nginx.org/location-snippets":                       "# Stuff before.\n##hub-snippet-start\nauth_request /auth;\nauth_request_set $value_0 $upstream_http_Authorization; proxy_set_header Authorization $value_0;\n##hub-snippet-end",
-				"nginx.ingress.kubernetes.io/auth-url":              "http://hub-agent.default.svc.cluster.local/my-policy@test",
+				"nginx.ingress.kubernetes.io/auth-url":              "http://hub-agent.default.svc.cluster.local/my-policy",
 				"nginx.ingress.kubernetes.io/configuration-snippet": "##hub-snippet-start\nauth_request_set $value_0 $upstream_http_Authorization; proxy_set_header Authorization $value_0;\n##hub-snippet-end\n# Stuff after.",
 			},
 			wantPatch: map[string]string{
 				"custom-annotation":                                 "foobar",
 				"hub.traefik.io/access-control-policy":              "my-policy",
-				"nginx.org/server-snippets":                         "# Stuff before.\n##hub-snippet-start\nlocation /auth {proxy_pass http://hub-agent.default.svc.cluster.local/my-policy@test;}\n##hub-snippet-end\n# Stuff after.",
-				"nginx.org/location-snippets":                       "# Stuff before.\n##hub-snippet-start\nauth_request /auth;\n##hub-snippet-end",
-				"nginx.ingress.kubernetes.io/auth-url":              "http://hub-agent.default.svc.cluster.local/my-policy@test",
+				"nginx.ingress.kubernetes.io/auth-url":              "http://hub-agent.default.svc.cluster.local/my-policy",
 				"nginx.ingress.kubernetes.io/configuration-snippet": "\n# Stuff after.",
 			},
 		},
@@ -426,23 +344,19 @@ func TestNginxIngress_Review(t *testing.T) {
 				},
 			},
 			prevAnnotations: map[string]string{
-				"hub.traefik.io/access-control-policy":              "my-policy@test",
+				"hub.traefik.io/access-control-policy":              "my-policy",
 				"custom-annotation":                                 "foobar",
-				"nginx.org/server-snippets":                         "# Stuff before.\n##hub-snippet-start\nlocation /auth {proxy_pass http://hub-agent.default.svc.cluster.local/my-policy@test;}\n##hub-snippet-end",
-				"nginx.org/location-snippets":                       "##hub-snippet-start\nauth_request /auth;auth_request_set $value_0 $upstream_http_Authorization;proxy_set_header Authorization $value_0;\n##hub-snippet-end",
-				"nginx.ingress.kubernetes.io/auth-url":              "http://hub-agent.default.svc.cluster.local/my-policy@test",
+				"nginx.ingress.kubernetes.io/auth-url":              "http://hub-agent.default.svc.cluster.local/my-policy",
 				"nginx.ingress.kubernetes.io/configuration-snippet": "##hub-snippet-start\nauth_request_set $value_0 $upstream_http_Authorization;proxy_set_header Authorization $value_0;\n##hub-snippet-end",
 			},
 			ingAnnotations: map[string]string{
 				"custom-annotation":                                 "foobar",
-				"nginx.org/server-snippets":                         "# Stuff before.\n##hub-snippet-start\nlocation /auth {proxy_pass http://hub-agent.default.svc.cluster.local/my-policy@test;}\n##hub-snippet-end",
-				"nginx.org/location-snippets":                       "##hub-snippet-start\nauth_request /auth;auth_request_set $value_0 $upstream_http_Authorization;proxy_set_header Authorization $value_0;\n##hub-snippet-end",
-				"nginx.ingress.kubernetes.io/auth-url":              "http://hub-agent.default.svc.cluster.local/my-policy@test",
+				"nginx.ingress.kubernetes.io/auth-url":              "http://hub-agent.default.svc.cluster.local/my-policy",
 				"nginx.ingress.kubernetes.io/configuration-snippet": "##hub-snippet-start\nauth_request_set $value_0 $upstream_http_Authorization;proxy_set_header Authorization $value_0;\n##hub-snippet-end",
 			},
 			wantPatch: map[string]string{
-				"custom-annotation":         "foobar",
-				"nginx.org/server-snippets": "# Stuff before.\n",
+				"custom-annotation":                    "foobar",
+				"nginx.ingress.kubernetes.io/auth-url": "http://hub-agent.default.svc.cluster.local/my-policy",
 			},
 		},
 		{
@@ -461,16 +375,14 @@ func TestNginxIngress_Review(t *testing.T) {
 			wantPatch: map[string]string{
 				"custom-annotation":                                 "foobar",
 				"hub.traefik.io/access-control-policy":              "my-policy",
-				"nginx.org/server-snippets":                         "##hub-snippet-start\nlocation /auth {proxy_pass http://hub-agent.default.svc.cluster.local/my-policy@test;}\n##hub-snippet-end",
-				"nginx.org/location-snippets":                       "##hub-snippet-start\nauth_request /auth;\nauth_request_set $value_0 $upstream_http_User; proxy_set_header User $value_0;\nauth_request_set $value_1 $upstream_http_Authorization; proxy_set_header Authorization $value_1;\n##hub-snippet-end",
-				"nginx.ingress.kubernetes.io/auth-url":              "http://hub-agent.default.svc.cluster.local/my-policy@test",
+				"nginx.ingress.kubernetes.io/auth-url":              "http://hub-agent.default.svc.cluster.local/my-policy",
 				"nginx.ingress.kubernetes.io/configuration-snippet": "##hub-snippet-start\nauth_request_set $value_0 $upstream_http_User; proxy_set_header User $value_0;\nauth_request_set $value_1 $upstream_http_Authorization; proxy_set_header Authorization $value_1;\n##hub-snippet-end",
 			},
 		},
 		{
 			desc: "adds basic authentication with username and strip authorization",
 			config: acp.Config{
-				DigestAuth: &digestauth.Config{
+				BasicAuth: &basicauth.Config{
 					Users:                    []string{"user:password"},
 					StripAuthorizationHeader: true,
 					ForwardUsernameHeader:    "User",
@@ -483,9 +395,7 @@ func TestNginxIngress_Review(t *testing.T) {
 			wantPatch: map[string]string{
 				"custom-annotation":                                 "foobar",
 				"hub.traefik.io/access-control-policy":              "my-policy",
-				"nginx.org/server-snippets":                         "##hub-snippet-start\nlocation /auth {proxy_pass http://hub-agent.default.svc.cluster.local/my-policy@test;}\n##hub-snippet-end",
-				"nginx.org/location-snippets":                       "##hub-snippet-start\nauth_request /auth;\nauth_request_set $value_0 $upstream_http_User; proxy_set_header User $value_0;\nauth_request_set $value_1 $upstream_http_Authorization; proxy_set_header Authorization $value_1;\n##hub-snippet-end",
-				"nginx.ingress.kubernetes.io/auth-url":              "http://hub-agent.default.svc.cluster.local/my-policy@test",
+				"nginx.ingress.kubernetes.io/auth-url":              "http://hub-agent.default.svc.cluster.local/my-policy",
 				"nginx.ingress.kubernetes.io/configuration-snippet": "##hub-snippet-start\nauth_request_set $value_0 $upstream_http_User; proxy_set_header User $value_0;\nauth_request_set $value_1 $upstream_http_Authorization; proxy_set_header Authorization $value_1;\n##hub-snippet-end",
 			},
 		},
@@ -500,40 +410,39 @@ func TestNginxIngress_Review(t *testing.T) {
 				"custom-annotation":                                 "foobar",
 				"hub.traefik.io/access-control-policy":              "my-policy",
 				"nginx.ingress.kubernetes.io/configuration-snippet": "# Stuff before.",
-				"nginx.org/location-snippets":                       "# Stuff before.",
-				"nginx.org/server-snippets":                         "# Stuff before.",
 			},
 			wantPatch: map[string]string{
 				"custom-annotation":                                 "foobar",
 				"hub.traefik.io/access-control-policy":              "my-policy",
-				"nginx.org/server-snippets":                         "# Stuff before.\n##hub-snippet-start\nlocation /auth {proxy_pass http://hub-agent.default.svc.cluster.local/my-policy@test;}\n##hub-snippet-end",
-				"nginx.org/location-snippets":                       "# Stuff before.\n##hub-snippet-start\nauth_request /auth;\n##hub-snippet-end",
-				"nginx.ingress.kubernetes.io/auth-url":              "http://hub-agent.default.svc.cluster.local/my-policy@test",
+				"nginx.ingress.kubernetes.io/auth-url":              "http://hub-agent.default.svc.cluster.local/my-policy",
 				"nginx.ingress.kubernetes.io/configuration-snippet": "# Stuff before.",
 			},
 		},
 		{
-			desc: "patches between existing snippets",
+			desc: "oidc annotations with ForwardHeaders",
 			config: acp.Config{
-				JWT: &jwt.Config{
-					StripAuthorizationHeader: false,
+				OIDC: &oidc.Config{
+					ForwardHeaders: map[string]string{
+						"X-Forwarded-User": "user",
+					},
 				},
 			},
 			ingAnnotations: map[string]string{
-				"hub.traefik.io/access-control-policy":              "my-policy",
 				"custom-annotation":                                 "foobar",
-				"nginx.org/server-snippets":                         "# Stuff before.\n##hub-snippet-start\nlocation /auth {proxy_pass http://hub-agent.default.svc.cluster.local/my-bad-policy@test;}\n##hub-snippet-end\n# Stuff after.",
-				"nginx.org/location-snippets":                       "# Stuff before.\n##hub-snippet-start\nauth_request /auth;\nauth_request_set $value_0 $upstream_http_Authorization; proxy_set_header Authorization $value_0;\n##hub-snippet-end",
-				"nginx.ingress.kubernetes.io/auth-url":              "http://hub-agent.default.svc.cluster.local/my-policy@test",
+				"hub.traefik.io/access-control-policy":              "my-policy",
+				"nginx.ingress.kubernetes.io/auth-url":              "http://hub-agent.default.svc.cluster.local/my-policy",
 				"nginx.ingress.kubernetes.io/configuration-snippet": "##hub-snippet-start\nauth_request_set $value_0 $upstream_http_Authorization; proxy_set_header Authorization $value_0;\n##hub-snippet-end\n# Stuff after.",
+				"nginx.ingress.kubernetes.io/server-snippet":        "##hub-snippet-start\nauth_request_set $value_0 $upstream_http_Authorization; proxy_set_header Authorization $value_0;\n##hub-snippet-end\n# Stuff after.",
+				"nginx.ingress.kubernetes.io/auth-snippet":          "##hub-snippet-start\nauth_request_set $value_0 $upstream_http_Authorization; proxy_set_header Authorization $value_0;\n##hub-snippet-end\n# Stuff after.",
 			},
 			wantPatch: map[string]string{
 				"custom-annotation":                                 "foobar",
 				"hub.traefik.io/access-control-policy":              "my-policy",
-				"nginx.org/server-snippets":                         "# Stuff before.\n##hub-snippet-start\nlocation /auth {proxy_pass http://hub-agent.default.svc.cluster.local/my-policy@test;}\n##hub-snippet-end\n# Stuff after.",
-				"nginx.org/location-snippets":                       "# Stuff before.\n##hub-snippet-start\nauth_request /auth;\n##hub-snippet-end",
-				"nginx.ingress.kubernetes.io/auth-url":              "http://hub-agent.default.svc.cluster.local/my-policy@test",
-				"nginx.ingress.kubernetes.io/configuration-snippet": "\n# Stuff after.",
+				"nginx.ingress.kubernetes.io/auth-signin":           "$url_redirect",
+				"nginx.ingress.kubernetes.io/auth-snippet":          "##hub-snippet-start\nproxy_set_header From nginx;\nproxy_set_header X-Forwarded-Uri $request_uri;\nproxy_set_header X-Forwarded-Host $host;\nproxy_set_header X-Forwarded-Proto $scheme;\nproxy_set_header X-Forwarded-Method $request_method;\n##hub-snippet-end\n# Stuff after.",
+				"nginx.ingress.kubernetes.io/auth-url":              "http://hub-agent.default.svc.cluster.local/my-policy",
+				"nginx.ingress.kubernetes.io/configuration-snippet": "##hub-snippet-start\nauth_request_set $value_0 $upstream_http_X_Forwarded_User; proxy_set_header X-Forwarded-User $value_0;\nauth_request_set $value_1 $upstream_http_Authorization; proxy_set_header Authorization $value_1;\nauth_request_set $value_2 $upstream_http_Cookie; proxy_set_header Cookie $value_2;\n auth_request_set $url_redirect $upstream_http_url_redirect;\n##hub-snippet-end\n# Stuff after.",
+				"nginx.ingress.kubernetes.io/server-snippet":        "##hub-snippet-start\nlocation /callback { proxy_pass http://hub-agent.default.svc.cluster.local/my-policy; \nproxy_set_header From nginx;\nproxy_set_header X-Forwarded-Uri $request_uri;\nproxy_set_header X-Forwarded-Host $host;\nproxy_set_header X-Forwarded-Proto $scheme;\nproxy_set_header X-Forwarded-Method $request_method;}\n##hub-snippet-end\n# Stuff after.",
 			},
 		},
 		{
@@ -547,10 +456,10 @@ func TestNginxIngress_Review(t *testing.T) {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Parallel()
 
-			policies := func(canonicalName string) *acp.Config {
-				return &test.config
-			}
-			rev := NewNginxIngress("http://hub-agent.default.svc.cluster.local", ingressClassesMock{}, policyGetterMock(policies))
+			policyGetter := newPolicyGetterMock(t).
+				OnGetConfig(mock.Anything).TypedReturns(&test.config, nil).Maybe().
+				Parent
+			rev := NewNginxIngress("http://hub-agent.default.svc.cluster.local", nil, policyGetter)
 
 			ing := struct {
 				Metadata metav1.ObjectMeta `json:"metadata"`
@@ -599,10 +508,7 @@ func TestNginxIngress_Review(t *testing.T) {
 			assert.Equal(t, 3, len(patch))
 			assert.Equal(t, "replace", patch["op"])
 			assert.Equal(t, "/metadata/annotations", patch["path"])
-			assert.Equal(t, len(test.wantPatch), len(patch["value"].(map[string]string)))
-			for k := range test.wantPatch {
-				assert.Equal(t, test.wantPatch[k], patch["value"].(map[string]string)[k])
-			}
+			assert.Equal(t, test.wantPatch, patch["value"].(map[string]string))
 		})
 	}
 }
