@@ -106,7 +106,7 @@ func (r NginxIngress) Review(ctx context.Context, ar admv1.AdmissionReview) (map
 		return nil, nil
 	}
 
-	var snippets nginxSnippets
+	nginxAnno := map[string]string{}
 	if polName == "" {
 		log.Ctx(ctx).Debug().Msg("No ACP annotation found")
 	} else {
@@ -118,19 +118,19 @@ func (r NginxIngress) Review(ctx context.Context, ar admv1.AdmissionReview) (map
 			return nil, err
 		}
 
-		snippets, err = genSnippets(polName, polCfg, r.agentAddress)
+		nginxAnno, err = genNginxAnnotations(polName, polCfg, r.agentAddress)
 		if err != nil {
 			return nil, err
 		}
 	}
-	snippets = mergeSnippets(snippets, ing.Metadata.Annotations)
+	nginxAnno = mergeSnippets(nginxAnno, ing.Metadata.Annotations)
 
-	if noNginxPatchRequired(ing.Metadata.Annotations, snippets) {
+	if noNginxPatchRequired(ing.Metadata.Annotations, nginxAnno) {
 		log.Ctx(ctx).Debug().Str("acp_name", polName).Msg("No patch required")
 		return nil, nil
 	}
 
-	setNginxAnnotations(ing.Metadata.Annotations, snippets)
+	setNginxAnnotations(ing.Metadata.Annotations, nginxAnno)
 
 	log.Ctx(ctx).Info().Str("acp_name", polName).Msg("Patching resource")
 
@@ -141,42 +141,24 @@ func (r NginxIngress) Review(ctx context.Context, ar admv1.AdmissionReview) (map
 	}, nil
 }
 
-func noNginxPatchRequired(anno map[string]string, snippets nginxSnippets) bool {
-	return anno["nginx.ingress.kubernetes.io/configuration-snippet"] == snippets.ConfigurationSnippet &&
-		anno["nginx.ingress.kubernetes.io/server-snippet"] == snippets.ServerSnippet &&
-		anno["nginx.ingress.kubernetes.io/auth-url"] == snippets.AuthURL &&
-		anno["nginx.ingress.kubernetes.io/auth-signin"] == snippets.AuthSignin &&
-		anno["nginx.ingress.kubernetes.io/auth-snippet"] == snippets.AuthSnippet
+func noNginxPatchRequired(anno, nginxAnno map[string]string) bool {
+	for k, v := range nginxAnno {
+		if anno[k] != v {
+			return false
+		}
+	}
+
+	return true
 }
 
-func setNginxAnnotations(anno map[string]string, snippets nginxSnippets) {
-	anno["nginx.ingress.kubernetes.io/auth-signin"] = snippets.AuthSignin
-	anno["nginx.ingress.kubernetes.io/auth-snippet"] = snippets.AuthSnippet
-	anno["nginx.ingress.kubernetes.io/auth-url"] = snippets.AuthURL
-	anno["nginx.ingress.kubernetes.io/configuration-snippet"] = snippets.ConfigurationSnippet
-	anno["nginx.ingress.kubernetes.io/server-snippet"] = snippets.ServerSnippet
+func setNginxAnnotations(anno, nginxAnno map[string]string) {
+	for k, v := range nginxAnno {
+		if v == "" {
+			delete(anno, k)
+			continue
+		}
 
-	clearEmptyAnnotations(anno)
-}
-
-func clearEmptyAnnotations(anno map[string]string) {
-	if anno["nginx.org/server-snippets"] == "" {
-		delete(anno, "nginx.org/server-snippets")
-	}
-	if anno["nginx.org/location-snippets"] == "" {
-		delete(anno, "nginx.org/location-snippets")
-	}
-	if anno["nginx.ingress.kubernetes.io/auth-url"] == "" {
-		delete(anno, "nginx.ingress.kubernetes.io/auth-url")
-	}
-	if anno["nginx.ingress.kubernetes.io/configuration-snippet"] == "" {
-		delete(anno, "nginx.ingress.kubernetes.io/configuration-snippet")
-	}
-	if anno["nginx.ingress.kubernetes.io/auth-signin"] == "" {
-		delete(anno, "nginx.ingress.kubernetes.io/auth-signin")
-	}
-	if anno["nginx.ingress.kubernetes.io/auth-snippet"] == "" {
-		delete(anno, "nginx.ingress.kubernetes.io/auth-snippet")
+		anno[k] = v
 	}
 }
 
