@@ -187,15 +187,8 @@ func TestTraefikIngress_CanReviewChecksIngressClass(t *testing.T) {
 			canReviewErr: assert.NoError,
 		},
 		{
-			desc:       "can review if annotation is correct",
-			annotation: "traefik",
-			ingressClassesMock: func(t *testing.T) IngressClasses {
-				t.Helper()
-
-				return newIngressClassesMock(t).
-					OnGetDefaultController().TypedReturns(ingclass.ControllerTypeTraefik, nil).Once().
-					Parent
-			},
+			desc:         "can review if annotation is correct",
+			annotation:   "traefik",
 			canReview:    assert.True,
 			canReviewErr: assert.NoError,
 		},
@@ -206,7 +199,6 @@ func TestTraefikIngress_CanReviewChecksIngressClass(t *testing.T) {
 				t.Helper()
 
 				return newIngressClassesMock(t).
-					OnGetDefaultController().TypedReturns(ingclass.ControllerTypeTraefik, nil).Once().
 					OnGetController("custom-traefik-ingress-class").TypedReturns(ingclass.ControllerTypeTraefik, nil).Once().
 					Parent
 			},
@@ -220,7 +212,6 @@ func TestTraefikIngress_CanReviewChecksIngressClass(t *testing.T) {
 				t.Helper()
 
 				return newIngressClassesMock(t).
-					OnGetDefaultController().TypedReturns(ingclass.ControllerTypeTraefik, nil).Once().
 					OnGetController("custom-traefik-ingress-class").TypedReturns(ingclass.ControllerTypeTraefik, nil).Once().
 					Parent
 			},
@@ -234,7 +225,6 @@ func TestTraefikIngress_CanReviewChecksIngressClass(t *testing.T) {
 				t.Helper()
 
 				return newIngressClassesMock(t).
-					OnGetDefaultController().TypedReturns(ingclass.ControllerTypeTraefik, nil).Once().
 					OnGetController("powpow").TypedReturns("", errors.New("nope")).Once().
 					Parent
 			},
@@ -249,7 +239,6 @@ func TestTraefikIngress_CanReviewChecksIngressClass(t *testing.T) {
 				t.Helper()
 
 				return newIngressClassesMock(t).
-					OnGetDefaultController().TypedReturns(ingclass.ControllerTypeTraefik, nil).Once().
 					OnGetController("custom-traefik-ingress-class").TypedReturns(ingclass.ControllerTypeTraefik, nil).Once().
 					Parent
 			},
@@ -264,7 +253,6 @@ func TestTraefikIngress_CanReviewChecksIngressClass(t *testing.T) {
 				t.Helper()
 
 				return newIngressClassesMock(t).
-					OnGetDefaultController().TypedReturns(ingclass.ControllerTypeTraefik, nil).Once().
 					OnGetController("powpow").TypedReturns("", errors.New("nope")).Once().
 					Parent
 			},
@@ -279,7 +267,12 @@ func TestTraefikIngress_CanReviewChecksIngressClass(t *testing.T) {
 			t.Parallel()
 
 			fwdAuthMdlwrs := NewFwdAuthMiddlewares("", nil, nil)
-			review := NewTraefikIngress(test.ingressClassesMock(t), fwdAuthMdlwrs)
+
+			var ic IngressClasses
+			if test.ingressClassesMock != nil {
+				ic = test.ingressClassesMock(t)
+			}
+			review := NewTraefikIngress(ic, fwdAuthMdlwrs)
 
 			ing := netv1.Ingress{
 				ObjectMeta: metav1.ObjectMeta{

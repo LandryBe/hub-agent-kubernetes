@@ -65,7 +65,8 @@ func (r TraefikIngress) CanReview(ar admv1.AdmissionReview) (bool, error) {
 	}
 
 	if ingClassName != "" {
-		ctrlr, err := r.ingressClasses.GetController(ingClassName)
+		var ctrlr string
+		ctrlr, err = r.ingressClasses.GetController(ingClassName)
 		if err != nil {
 			return false, fmt.Errorf("get ingress class controller from ingress class name: %w", err)
 		}
@@ -83,7 +84,8 @@ func (r TraefikIngress) CanReview(ar admv1.AdmissionReview) (bool, error) {
 			return false, nil
 		}
 
-		ctrlr, err := r.ingressClasses.GetController(ingClassAnno)
+		var ctrlr string
+		ctrlr, err = r.ingressClasses.GetController(ingClassAnno)
 		if err != nil {
 			return false, fmt.Errorf("get ingress class controller from annotation: %w", err)
 		}
