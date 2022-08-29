@@ -279,21 +279,16 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		if req.Header.Get("From") == "nginx" {
-			rw.Header().Add("url_redirect", forwardedURL+"&rd=1")
-			rw.WriteHeader(http.StatusUnauthorized)
+		if req.Header.Get("From") != "nginx" {
+			http.Redirect(
+				rw,
+				req,
+				forwardedURL,
+				http.StatusFound,
+			)
 
 			return
 		}
-
-		http.Redirect(
-			rw,
-			req,
-			forwardedURL,
-			http.StatusFound,
-		)
-
-		return
 	}
 
 	claims := make(map[string]interface{})
