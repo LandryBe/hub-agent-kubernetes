@@ -279,6 +279,13 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 			return
 		}
 
+		if req.Header.Get("From") == "nginx" {
+			rw.Header().Add("url_redirect", forwardedURL+"&rd=1")
+			rw.WriteHeader(http.StatusUnauthorized)
+
+			return
+		}
+
 		http.Redirect(
 			rw,
 			req,
@@ -408,7 +415,7 @@ func (h *Handler) redirectToProvider(rw http.ResponseWriter, req *http.Request, 
 	// spec: section 3.1.2.1.
 
 	if req.Header.Get("From") == "nginx" {
-		rw.Header().Add("url_provider", h.oauth.AuthCodeURL(
+		rw.Header().Add("url_redirect", h.oauth.AuthCodeURL(
 			state.RedirectID,
 			opts...,
 		)+"&fix=1") // nginx quick fix

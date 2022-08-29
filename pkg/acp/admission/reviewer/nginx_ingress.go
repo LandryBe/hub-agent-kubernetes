@@ -142,17 +142,17 @@ func (r NginxIngress) Review(ctx context.Context, ar admv1.AdmissionReview) (map
 }
 
 func noNginxPatchRequired(anno map[string]string, snippets nginxSnippets) bool {
-	return anno["nginx.ingress.kubernetes.io/auth-signin"] == snippets.AuthSignin &&
-		anno["nginx.ingress.kubernetes.io/auth-snippet"] == snippets.AuthSnippet &&
-		anno["nginx.ingress.kubernetes.io/auth-url"] == snippets.AuthURL &&
-		anno["nginx.ingress.kubernetes.io/configuration-snippet"] == snippets.ConfigurationSnippet &&
+	return anno["nginx.ingress.kubernetes.io/configuration-snippet"] == snippets.ConfigurationSnippet &&
 		anno["nginx.ingress.kubernetes.io/server-snippet"] == snippets.ServerSnippet
+	// anno["nginx.ingress.kubernetes.io/auth-url"] == snippets.AuthURL &&
+	// anno["nginx.ingress.kubernetes.io/auth-signin"] == snippets.AuthSignin &&
+	// anno["nginx.ingress.kubernetes.io/auth-snippet"] == snippets.AuthSnippet &&
 }
 
 func setNginxAnnotations(anno map[string]string, snippets nginxSnippets) {
-	anno["nginx.ingress.kubernetes.io/auth-signin"] = snippets.AuthSignin
-	anno["nginx.ingress.kubernetes.io/auth-snippet"] = snippets.AuthSnippet
-	anno["nginx.ingress.kubernetes.io/auth-url"] = snippets.AuthURL
+	// anno["nginx.ingress.kubernetes.io/auth-signin"] = snippets.AuthSignin
+	// anno["nginx.ingress.kubernetes.io/auth-snippet"] = snippets.AuthSnippet
+	// anno["nginx.ingress.kubernetes.io/auth-url"] = snippets.AuthURL
 	anno["nginx.ingress.kubernetes.io/configuration-snippet"] = snippets.ConfigurationSnippet
 	anno["nginx.ingress.kubernetes.io/server-snippet"] = snippets.ServerSnippet
 

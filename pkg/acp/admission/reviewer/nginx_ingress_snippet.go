@@ -37,14 +37,18 @@ func genSnippets(polName string, polCfg *acp.Config, agentAddr string) (nginxSni
 	}
 
 	if polCfg.OIDC != nil {
-		nginxSnippet.AuthSignin = "$url_provider"
-		nginxSnippet.AuthSnippet = wrapHubSnippet(`
+		nginxSnippet.AuthSignin = "$url_redirect"
+		nginxSnippet.AuthSnippet = `
 proxy_set_header From nginx;
 proxy_set_header X-Forwarded-Uri $request_uri;
 proxy_set_header X-Forwarded-Host $host;
 proxy_set_header X-Forwarded-Proto $scheme;
-proxy_set_header X-Forwarded-Method $request_method;`)
-		nginxSnippet.ConfigurationSnippet += "auth_request_set $url_provider $upstream_http_url_provider;"
+proxy_set_header X-Forwarded-Method $request_method;`
+		nginxSnippet.ConfigurationSnippet += "auth_request /auth;"
+		nginxSnippet.ConfigurationSnippet += " auth_request_set $url_redirect $upstream_http_url_redirect;"
+		nginxSnippet.ConfigurationSnippet += " auth_request_set $cookie $upstream_http_set_cookie;"
+		nginxSnippet.ConfigurationSnippet += " add_header Set-Cookie $cookie;"
+		nginxSnippet.ConfigurationSnippet += " error_page 401 @oidc;"
 
 		url, err := url.Parse(polCfg.OIDC.RedirectURL)
 		if err != nil {
@@ -60,10 +64,14 @@ proxy_set_header X-Forwarded-Method $request_method;`)
 			redirectURL = "/" + redirectURL
 		}
 
-		nginxSnippet.ServerSnippet = wrapHubSnippet(fmt.Sprintf("location %s { proxy_pass %s/%s; proxy_set_header X-Forwarded-Uri $request_uri; proxy_set_header X-Forwarded-Host $host; proxy_set_header X-Forwarded-Proto $scheme; }", redirectURL, agentAddr, polName))
+		nginxSnippet.ServerSnippet = fmt.Sprintf("location %s { proxy_pass %s/%s; proxy_set_header X-Forwarded-Uri $request_uri; proxy_set_header X-Forwarded-Host $host; proxy_set_header X-Forwarded-Proto $scheme; }", redirectURL, agentAddr, polName)
+		nginxSnippet.ServerSnippet += fmt.Sprintf("\nlocation /auth { %s proxy_pass %s; }", nginxSnippet.AuthSnippet, nginxSnippet.AuthURL)
+		nginxSnippet.ServerSnippet += "\nlocation @oidc { add_header Set-Cookie $cookie; return 302 $url_redirect;}"
 	}
 
 	nginxSnippet.ConfigurationSnippet = wrapHubSnippet(nginxSnippet.ConfigurationSnippet)
+	nginxSnippet.AuthSnippet = wrapHubSnippet(nginxSnippet.AuthSnippet)
+	nginxSnippet.ServerSnippet = wrapHubSnippet(nginxSnippet.ServerSnippet)
 
 	return nginxSnippet, nil
 }
@@ -88,9 +96,9 @@ func wrapHubSnippet(s string) string {
 
 func mergeSnippets(snippets nginxSnippets, anno map[string]string) nginxSnippets {
 	return nginxSnippets{
-		AuthURL:              snippets.AuthURL,
-		AuthSignin:           snippets.AuthSignin,
-		AuthSnippet:          mergeSnippet(anno["nginx.ingress.kubernetes.io/auth-snippet"], snippets.AuthSnippet),
+		AuthURL: snippets.AuthURL,
+		// AuthSignin:           snippets.AuthSignin,
+		// AuthSnippet:          mergeSnippet(anno["nginx.ingress.kubernetes.io/auth-snippet"], snippets.AuthSnippet),
 		ConfigurationSnippet: mergeSnippet(anno["nginx.ingress.kubernetes.io/configuration-snippet"], snippets.ConfigurationSnippet),
 		ServerSnippet:        mergeSnippet(anno["nginx.ingress.kubernetes.io/server-snippet"], snippets.ServerSnippet),
 	}
