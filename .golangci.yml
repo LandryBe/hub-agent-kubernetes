@@ -131,6 +131,9 @@ linters:
     - ifshort # deprecated
     - structcheck # deprecated
     - exhaustivestruct # deprecated
+    - deadcode # deprecated
+    - varcheck # deprecated
+    - wastedassign # deprecated
     - sqlclosecheck # not relevant (SQL)
     - rowserrcheck # not relevant (SQL)
     - execinquery # not relevant (SQL)
@@ -157,6 +160,7 @@ linters:
     - ireturn
     - contextcheck
     - errchkjson
+    - revive
 
 issues:
   exclude-use-default: false
@@ -214,9 +218,14 @@ issues:
         - funlen
     # Reducing cyclomatic complexity would reduce readability.
     - path: pkg/acp/oidc/oidc.go
-      text: "cyclomatic complexity 21 of func `(.*).ServeHTTP` is high"
+      text: "cyclomatic complexity 22 of func `(.*).ServeHTTP` is high"
       linters:
         - gocyclo
+    # Reducing cognitive complexity would reduce readability.
+    - path: pkg/acp/oidc/oidc.go
+      text: "cognitive complexity 31 of func `(.*).ServeHTTP` is high"
+      linters:
+        - gocognit
     - path: pkg/acp/oidc/oidc_test.go
       text: "G101: Potential hardcoded credentials"
       linters:

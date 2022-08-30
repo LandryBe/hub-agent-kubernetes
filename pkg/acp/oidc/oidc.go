@@ -259,16 +259,6 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	// 9th step of diagram.
-	var idToken *oidc.IDToken
-	idToken, err = h.verifier.Verify(req.Context(), sess.IDToken)
-	if err != nil {
-		logger.Debug().Err(err).Msg("Invalid ID token")
-		http.Error(rw, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-
-		return
-	}
-
 	// Refresh the session is possible only if we can return a redirect to the user.
 	// If we can't, we check the token and continue without update the session user.
 	if refreshSession && h.shouldRedirect(req) {
@@ -289,6 +279,16 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 			return
 		}
+	}
+
+	// 9th step of diagram.
+	var idToken *oidc.IDToken
+	idToken, err = h.verifier.Verify(req.Context(), sess.IDToken)
+	if err != nil {
+		logger.Debug().Err(err).Msg("Invalid ID token")
+		http.Error(rw, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+
+		return
 	}
 
 	claims := make(map[string]interface{})
