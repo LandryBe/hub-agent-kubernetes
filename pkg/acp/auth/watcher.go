@@ -139,7 +139,7 @@ func (w *Watcher) populateSecrets() {
 func (w *Watcher) OnAdd(obj interface{}) {
 	switch v := obj.(type) {
 	case *hubv1alpha1.AccessControlPolicy:
-		w.ConfigFromPolicy(v)
+		w.updateConfigFromPolicy(v)
 
 	case *corev1.Secret:
 		w.configsMu.Lock()
@@ -166,7 +166,7 @@ func (w *Watcher) OnAdd(obj interface{}) {
 func (w *Watcher) OnUpdate(_, newObj interface{}) {
 	switch v := newObj.(type) {
 	case *hubv1alpha1.AccessControlPolicy:
-		w.ConfigFromPolicy(v)
+		w.updateConfigFromPolicy(v)
 
 	case *corev1.Secret:
 		w.configsMu.Lock()
@@ -189,9 +189,7 @@ func (w *Watcher) OnUpdate(_, newObj interface{}) {
 	}
 }
 
-// ConfigFromPolicy wraps acp.ConfigFromPolicy and stores the OIDC key in the
-// configuration.
-func (w *Watcher) ConfigFromPolicy(policy *hubv1alpha1.AccessControlPolicy) {
+func (w *Watcher) updateConfigFromPolicy(policy *hubv1alpha1.AccessControlPolicy) {
 	w.configsMu.Lock()
 	defer w.configsMu.Unlock()
 
