@@ -29,7 +29,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/go-github/github"
+	"github.com/google/go-github/v47/github"
 	goversion "github.com/hashicorp/go-version"
 	"github.com/rs/zerolog/log"
 )
