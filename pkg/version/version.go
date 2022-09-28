@@ -201,24 +201,24 @@ func (c Checker) check(ctx context.Context) error {
 		return fmt.Errorf("list tags: %s", string(all))
 	}
 
-	lastVersion, err := goversion.NewVersion(tags[0].GetName())
+	lastVersion, err := goversion.NewSemver(tags[0].GetName())
 	if err != nil {
 		return fmt.Errorf("parse version: %w", err)
 	}
 
-	currentVersion, err := goversion.NewVersion(version)
+	currentVersion, err := goversion.NewSemver(version)
 	// not a valid tag.
 	if err != nil {
 		versionErr := c.cluster.SetVersionStatus(ctx, Status{
 			UpToDate:       false,
 			CurrentVersion: version,
-			LastVersion:    lastVersion.String(),
+			LastVersion:    lastVersion.Original(),
 		})
 		if versionErr != nil {
 			return fmt.Errorf("set version status: %w", versionErr)
 		}
 
-		return fmt.Errorf("you are using %s version of the agent, please consider upgrading to %s", version, lastVersion.String())
+		return fmt.Errorf("you are using %s version of the agent, please consider upgrading to %s", version, lastVersion.Original())
 	}
 
 	// outdated version.
@@ -226,13 +226,13 @@ func (c Checker) check(ctx context.Context) error {
 		versionErr := c.cluster.SetVersionStatus(ctx, Status{
 			UpToDate:       false,
 			CurrentVersion: version,
-			LastVersion:    lastVersion.String(),
+			LastVersion:    lastVersion.Original(),
 		})
 		if versionErr != nil {
 			return fmt.Errorf("set version status: %w", versionErr)
 		}
 
-		return fmt.Errorf("you are using %s version of the agent, please consider upgrading to %s", version, lastVersion.String())
+		return fmt.Errorf("you are using %s version of the agent, please consider upgrading to %s", version, lastVersion.Original())
 	}
 
 	err = c.cluster.SetVersionStatus(ctx, Status{
