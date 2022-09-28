@@ -177,8 +177,13 @@ func (c controllerCmd) run(cliCtx *cli.Context) error {
 		return webhookAdmission(ctx, cliCtx, platformClient)
 	})
 
+	checker, err := version.NewChecker(platformClient)
+	if err != nil {
+		return fmt.Errorf("new checker: %w", err)
+	}
+
 	group.Go(func() error {
-		if err := startVersionChecker(ctx, platformClient); err != nil {
+		if err := checker.Start(ctx); err != nil {
 			return err
 		}
 
@@ -254,31 +259,4 @@ func writePID() error {
 	}
 
 	return nil
-}
-
-func startVersionChecker(ctx context.Context, platformClient *platform.Client) error {
-	checker, err := version.NewChecker(platformClient)
-	if err != nil {
-		return fmt.Errorf("new checker: %w", err)
-	}
-
-	ticker := time.Tick(24 * time.Hour)
-
-	time.Sleep(10 * time.Minute)
-
-	if err := checker.CheckNewVersion(ctx); err != nil {
-		log.Warn().Err(err).Msg("check new version ")
-	}
-
-	for {
-		select {
-		case <-ticker:
-			if err := checker.CheckNewVersion(ctx); err != nil {
-				log.Warn().Err(err).Msg("check new version ")
-			}
-
-		case <-ctx.Done():
-			return nil
-		}
-	}
 }

@@ -139,8 +139,8 @@ type clusterService interface {
 
 // Checker is able to check the agent version.
 type Checker struct {
-	cluster      clusterService
-	githubClient *github.Client
+	cluster clusterService
+	client  *github.Client
 }
 
 // NewChecker returns a new Checker.
@@ -154,11 +154,33 @@ func NewChecker(cluster clusterService) (*Checker, error) {
 	githubClient.UserAgent = userAgent()
 	githubClient.BaseURL = updateURL
 
-	return &Checker{cluster: cluster, githubClient: githubClient}, nil
+	return &Checker{cluster: cluster, client: githubClient}, nil
 }
 
-// CheckNewVersion checks if a new version is available.
-func (c *Checker) CheckNewVersion(ctx context.Context) error {
+func (c Checker) Start(ctx context.Context) error {
+	ticker := time.Tick(24 * time.Hour)
+
+	time.Sleep(10 * time.Minute)
+
+	if err := c.check(ctx); err != nil {
+		log.Warn().Err(err).Msg("check new version ")
+	}
+
+	for {
+		select {
+		case <-ticker:
+			if err := c.check(ctx); err != nil {
+				log.Warn().Err(err).Msg("check new version ")
+			}
+
+		case <-ctx.Done():
+			return nil
+		}
+	}
+}
+
+// check Checks if a new version is available.
+func (c Checker) check(ctx context.Context) error {
 	if version == "dev" {
 		return nil
 	}
@@ -166,7 +188,7 @@ func (c *Checker) CheckNewVersion(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	tags, resp, err := c.githubClient.Repositories.ListTags(ctx, "traefik", "hub-agent-kubernetes", nil)
+	tags, resp, err := c.client.Repositories.ListTags(ctx, "traefik", "hub-agent-kubernetes", nil)
 	if err != nil {
 		return fmt.Errorf("list tags: %w", err)
 	}
