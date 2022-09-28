@@ -162,7 +162,7 @@ func (c Checker) Start(ctx context.Context) error {
 	tick := time.NewTicker(24 * time.Hour)
 	defer tick.Stop()
 
-	time.Sleep(10 * time.Minute)
+	time.Sleep(10 * time.Second)
 
 	if err := c.check(ctx); err != nil {
 		log.Warn().Err(err).Msg("check new version ")
@@ -221,7 +221,7 @@ func (c Checker) check(ctx context.Context) error {
 		return fmt.Errorf("you are using %s version of the agent, please consider upgrading to %s", version, lastVersion.Original())
 	}
 
-	// outdated version.
+	// upToDate version.
 	if lastVersion.GreaterThan(currentVersion) {
 		versionErr := c.cluster.SetVersionStatus(ctx, Status{
 			UpToDate:       false,
