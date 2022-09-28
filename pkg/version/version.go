@@ -157,8 +157,10 @@ func NewChecker(cluster clusterService) (*Checker, error) {
 	return &Checker{cluster: cluster, client: githubClient}, nil
 }
 
+// Start starts the check of the agent version.
 func (c Checker) Start(ctx context.Context) error {
-	ticker := time.Tick(24 * time.Hour)
+	tick := time.NewTicker(24 * time.Hour)
+	defer tick.Stop()
 
 	time.Sleep(10 * time.Minute)
 
@@ -168,7 +170,7 @@ func (c Checker) Start(ctx context.Context) error {
 
 	for {
 		select {
-		case <-ticker:
+		case <-tick.C:
 			if err := c.check(ctx); err != nil {
 				log.Warn().Err(err).Msg("check new version ")
 			}
