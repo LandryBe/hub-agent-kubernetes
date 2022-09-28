@@ -36,9 +36,9 @@ type clusterService interface {
 
 // Status holds agent version data.
 type Status struct {
-	UpToDate       bool
-	CurrentVersion string
-	LastVersion    string
+	UpToDate       bool   `json:"upToDate,omitempty"`
+	CurrentVersion string `json:"currentVersion,omitempty"`
+	LatestVersion  string `json:"latestVersion,omitempty"`
 }
 
 // addHeaderTransport allows to add header to http request.
@@ -121,7 +121,7 @@ func (c Checker) check(ctx context.Context) error {
 	}
 
 	if !status.UpToDate {
-		return fmt.Errorf("you are using %s version of the agent, please consider upgrading to %s", status.CurrentVersion, status.LastVersion)
+		return fmt.Errorf("you are using %s version of the agent, please consider upgrading to %s", status.CurrentVersion, status.LatestVersion)
 	}
 
 	return nil
@@ -142,7 +142,7 @@ func (c Checker) getStatus(ctx context.Context) (Status, error) {
 		return Status{}, fmt.Errorf("list tags: %s", string(all))
 	}
 
-	lastVersion, err := goversion.NewSemver(tags[0].GetName())
+	latestVersion, err := goversion.NewSemver(tags[0].GetName())
 	if err != nil {
 		return Status{}, fmt.Errorf("parse version: %w", err)
 	}
@@ -152,21 +152,21 @@ func (c Checker) getStatus(ctx context.Context) (Status, error) {
 	if err != nil {
 		return Status{
 			CurrentVersion: c.version,
-			LastVersion:    lastVersion.Original(),
+			LatestVersion:  latestVersion.Original(),
 		}, nil
 	}
 
 	// outdated version.
-	if lastVersion.GreaterThan(currentVersion) {
+	if latestVersion.GreaterThan(currentVersion) {
 		return Status{
 			CurrentVersion: c.version,
-			LastVersion:    lastVersion.Original(),
+			LatestVersion:  latestVersion.Original(),
 		}, nil
 	}
 
 	return Status{
 		UpToDate:       true,
 		CurrentVersion: c.version,
-		LastVersion:    c.version,
+		LatestVersion:  c.version,
 	}, nil
 }

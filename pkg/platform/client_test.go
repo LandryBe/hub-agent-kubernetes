@@ -1410,7 +1410,7 @@ func TestClient_SetVersionStatus(t *testing.T) {
 			status := version.Status{
 				UpToDate:       true,
 				CurrentVersion: "v0.5.0",
-				LastVersion:    "v0.5.0",
+				LatestVersion:  "v0.5.0",
 			}
 			err = c.SetVersionStatus(context.Background(), status)
 			test.wantErr(t, err)

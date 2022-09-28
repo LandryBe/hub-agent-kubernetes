@@ -57,17 +57,19 @@ func TestChecker_check(t *testing.T) {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Parallel()
 
-			lastVersion := "v0.5.0"
+			latestVersion := "v0.5.0"
 
 			h := http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 				assert.Equal(t, version, req.Header.Get("Traefik-Hub-Agent-Version"))
 				assert.Equal(t, "kubernetes", req.Header.Get("Traefik-Hub-Agent-Platform"))
 
-				b, err := json.Marshal([]*github.RepositoryTag{{Name: &lastVersion}})
-				require.NoError(t, err)
+				b, err := json.Marshal([]*github.RepositoryTag{{Name: &latestVersion}})
+				if err != nil {
+					http.Error(rw, err.Error(), http.StatusInternalServerError)
+					return
+				}
 
-				_, err = rw.Write(b)
-				require.NoError(t, err)
+				_, _ = rw.Write(b)
 			})
 
 			srv := httptest.NewServer(h)
@@ -78,7 +80,7 @@ func TestChecker_check(t *testing.T) {
 				OnSetVersionStatus(Status{
 					UpToDate:       test.upToDate,
 					CurrentVersion: test.version,
-					LastVersion:    lastVersion,
+					LatestVersion:  latestVersion,
 				}).TypedReturns(nil).Once().
 				Parent
 
@@ -90,9 +92,9 @@ func TestChecker_check(t *testing.T) {
 
 			if test.upToDate {
 				require.NoError(t, err)
-
 				return
 			}
+
 			require.Error(t, err)
 		})
 	}
