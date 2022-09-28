@@ -74,10 +74,6 @@ func TestChecker_check(t *testing.T) {
 			updateURL, err := url.Parse(srv.URL + "/")
 			require.NoError(t, err)
 
-			githubClient := github.NewClient(&http.Client{Transport: &addHeaderTransport{http.DefaultTransport}})
-			githubClient.UserAgent = userAgent()
-			githubClient.BaseURL = updateURL
-
 			cluster := newClusterServiceMock(t).
 				OnSetVersionStatus(Status{
 					UpToDate:       test.upToDate,
@@ -87,8 +83,7 @@ func TestChecker_check(t *testing.T) {
 				Parent
 
 			c := NewChecker(cluster)
-
-			c.client = githubClient
+			c.github = newGitHubClient(updateURL)
 			c.version = test.version
 
 			err = c.check(context.Background())

@@ -54,20 +54,30 @@ func (adt *addHeaderTransport) RoundTrip(req *http.Request) (*http.Response, err
 	return adt.RoundTripper.RoundTrip(req)
 }
 
+func newGitHubClient(baseURL *url.URL) *github.Client {
+	client := github.NewClient(&http.Client{Transport: &addHeaderTransport{RoundTripper: http.DefaultTransport}})
+	client.UserAgent = userAgent()
+	client.BaseURL = baseURL
+
+	return client
+}
+
 // Checker is able to check the agent version.
 type Checker struct {
 	cluster clusterService
-	client  *github.Client
+	github  *github.Client
 	version string
 }
 
 // NewChecker returns a new Checker.
 func NewChecker(cluster clusterService) *Checker {
-	githubClient := github.NewClient(&http.Client{Transport: &addHeaderTransport{RoundTripper: http.DefaultTransport}})
-	githubClient.UserAgent = userAgent()
-	githubClient.BaseURL, _ = url.Parse("https://update.traefik.io/")
+	baseURL, _ := url.Parse("https://update.traefik.io/")
 
-	return &Checker{cluster: cluster, client: githubClient, version: version}
+	return &Checker{
+		cluster: cluster,
+		github:  newGitHubClient(baseURL),
+		version: version,
+	}
 }
 
 // Start starts the check of the agent version.
@@ -121,7 +131,7 @@ func (c Checker) getStatus(ctx context.Context) (Status, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	tags, resp, err := c.client.Repositories.ListTags(ctx, "traefik", "hub-agent-kubernetes", nil)
+	tags, resp, err := c.github.Repositories.ListTags(ctx, "traefik", "hub-agent-kubernetes", nil)
 	if err != nil {
 		return Status{}, fmt.Errorf("list tags: %w", err)
 	}
