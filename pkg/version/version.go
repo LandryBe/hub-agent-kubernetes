@@ -106,21 +106,24 @@ func moduleName() string {
 
 // SetUserAgent sets the user-agent on an HTTP request.
 func SetUserAgent(req *http.Request) {
-	ua := fmt.Sprintf("hub-agent-kubernetes/%s (%s; %s; %s)", Version(), commit, runtime.GOOS, runtime.GOARCH)
-	req.Header.Set("User-Agent", strings.TrimSpace(ua))
+	req.Header.Set("User-Agent", strings.TrimSpace(userAgent()))
+}
+
+func userAgent() string {
+	return fmt.Sprintf("hub-agent-kubernetes/%s (%s; %s; %s)", version, commit, runtime.GOOS, runtime.GOARCH)
 }
 
 // addHeaderTransport allows to add header to http request.
 type addHeaderTransport struct {
-	T http.RoundTripper
+	http.RoundTripper
 }
 
-// RoundTrip implements RoundTripper interface.
+// RoundTrip add headers to http request.
 func (adt *addHeaderTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	req.Header.Add("Traefik-Hub-Agent-Version", version)
 	req.Header.Add("Traefik-Hub-Agent-Platform", "kubernetes")
 
-	return adt.T.RoundTrip(req)
+	return adt.RoundTripper.RoundTrip(req)
 }
 
 // Status holds agent version data.
@@ -136,12 +139,22 @@ type clusterService interface {
 
 // Checker is able to check the agent version.
 type Checker struct {
-	client clusterService
+	cluster      clusterService
+	githubClient *github.Client
 }
 
 // NewChecker returns a new Checker.
-func NewChecker(client clusterService) *Checker {
-	return &Checker{client: client}
+func NewChecker(cluster clusterService) (*Checker, error) {
+	updateURL, err := url.Parse("https://update.traefik.io/")
+	if err != nil {
+		return nil, fmt.Errorf("parse URL: %w", err)
+	}
+
+	githubClient := github.NewClient(&http.Client{Transport: &addHeaderTransport{http.DefaultTransport}})
+	githubClient.UserAgent = userAgent()
+	githubClient.BaseURL = updateURL
+
+	return &Checker{cluster: cluster, githubClient: githubClient}, nil
 }
 
 // CheckNewVersion checks if a new version is available.
@@ -150,59 +163,55 @@ func (c *Checker) CheckNewVersion(ctx context.Context) error {
 		return nil
 	}
 
-	currentVersion, err := goversion.NewVersion(version)
-	if err != nil {
-		return fmt.Errorf("new version: %w", err)
-	}
-
-	updateURL, err := url.Parse("https://update.traefik.io/")
-	if err != nil {
-		return fmt.Errorf("parse URL: %w", err)
-	}
-
-	client := github.NewClient(&http.Client{Transport: &addHeaderTransport{T: http.DefaultTransport}})
-	client.UserAgent = fmt.Sprintf("hub-agent-kubernetes/%s (%s; %s; %s)", version, commit, runtime.GOOS, runtime.GOARCH)
-	client.BaseURL = updateURL
-
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	releases, resp, err := client.Repositories.ListReleases(ctx, "traefik", "hub-agent-kubernetes", nil)
+	tags, resp, err := c.githubClient.Repositories.ListTags(ctx, "traefik", "hub-agent-kubernetes", nil)
 	if err != nil {
-		return fmt.Errorf("list releases: %w", err)
+		return fmt.Errorf("list tags: %w", err)
 	}
 
 	if resp.StatusCode != http.StatusOK {
 		all, _ := io.ReadAll(resp.Body)
 
-		return fmt.Errorf("list releases: %s", string(all))
+		return fmt.Errorf("list tags: %s", string(all))
 	}
 
-	for _, release := range releases {
-		releaseVersion, versionErr := goversion.NewVersion(*release.TagName)
+	lastVersion, err := goversion.NewVersion(tags[0].GetName())
+	if err != nil {
+		return fmt.Errorf("parse version: %w", err)
+	}
+
+	currentVersion, err := goversion.NewVersion(version)
+	// not a valid tag.
+	if err != nil {
+		versionErr := c.cluster.SetVersionStatus(ctx, Status{
+			UpToDate:       false,
+			CurrentVersion: version,
+			LastVersion:    lastVersion.String(),
+		})
 		if versionErr != nil {
-			return fmt.Errorf("new version: %w", versionErr)
+			return fmt.Errorf("set version status: %w", versionErr)
 		}
 
-		if currentVersion.Prerelease() == "" && releaseVersion.Prerelease() != "" {
-			continue
-		}
-
-		if releaseVersion.GreaterThan(currentVersion) {
-			versionErr := c.client.SetVersionStatus(ctx, Status{
-				UpToDate:       false,
-				CurrentVersion: version,
-				LastVersion:    *release.TagName,
-			})
-			if versionErr != nil {
-				return fmt.Errorf("set version status: %w", versionErr)
-			}
-
-			return fmt.Errorf("a new release has been found: %s. Please consider updating", releaseVersion.String())
-		}
+		return fmt.Errorf("you are using %s version of the agent, please consider upgrading to %s", version, lastVersion.String())
 	}
 
-	err = c.client.SetVersionStatus(ctx, Status{
+	// outdated version.
+	if lastVersion.GreaterThan(currentVersion) {
+		versionErr := c.cluster.SetVersionStatus(ctx, Status{
+			UpToDate:       false,
+			CurrentVersion: version,
+			LastVersion:    lastVersion.String(),
+		})
+		if versionErr != nil {
+			return fmt.Errorf("set version status: %w", versionErr)
+		}
+
+		return fmt.Errorf("you are using %s version of the agent, please consider upgrading to %s", version, lastVersion.String())
+	}
+
+	err = c.cluster.SetVersionStatus(ctx, Status{
 		UpToDate:       true,
 		CurrentVersion: version,
 		LastVersion:    version,

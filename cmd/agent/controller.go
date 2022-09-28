@@ -178,7 +178,9 @@ func (c controllerCmd) run(cliCtx *cli.Context) error {
 	})
 
 	group.Go(func() error {
-		startVersionChecker(ctx, platformClient)
+		if err := startVersionChecker(ctx, platformClient); err != nil {
+			return err
+		}
 
 		return nil
 	})
@@ -254,8 +256,12 @@ func writePID() error {
 	return nil
 }
 
-func startVersionChecker(ctx context.Context, platformClient *platform.Client) {
-	checker := version.NewChecker(platformClient)
+func startVersionChecker(ctx context.Context, platformClient *platform.Client) error {
+	checker, err := version.NewChecker(platformClient)
+	if err != nil {
+		return fmt.Errorf("new checker: %w", err)
+	}
+
 	ticker := time.Tick(24 * time.Hour)
 
 	time.Sleep(10 * time.Minute)
@@ -272,7 +278,7 @@ func startVersionChecker(ctx context.Context, platformClient *platform.Client) {
 			}
 
 		case <-ctx.Done():
-			return
+			return nil
 		}
 	}
 }
