@@ -55,7 +55,8 @@ func TestChecker_check(t *testing.T) {
 	for _, test := range tests {
 		test := test
 		t.Run(test.desc, func(t *testing.T) {
-			version = test.version
+			t.Parallel()
+
 			lastVersion := "v0.5.0"
 
 			h := http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
@@ -85,10 +86,10 @@ func TestChecker_check(t *testing.T) {
 				}).TypedReturns(nil).Once().
 				Parent
 
-			c := Checker{
-				cluster: cluster,
-				client:  githubClient,
-			}
+			c := NewChecker(cluster)
+
+			c.client = githubClient
+			c.version = test.version
 
 			err = c.check(context.Background())
 

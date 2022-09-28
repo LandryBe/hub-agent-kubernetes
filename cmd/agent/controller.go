@@ -143,10 +143,7 @@ func (c controllerCmd) run(cliCtx *cli.Context) error {
 	}
 	topoWatch := topology.NewWatcher(topoFetcher, store.New(platformClient))
 
-	checker, err := version.NewChecker(platformClient)
-	if err != nil {
-		return fmt.Errorf("new checker: %w", err)
-	}
+	checker := version.NewChecker(platformClient)
 
 	group, ctx := errgroup.WithContext(cliCtx.Context)
 

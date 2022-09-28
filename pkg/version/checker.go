@@ -58,20 +58,16 @@ func (adt *addHeaderTransport) RoundTrip(req *http.Request) (*http.Response, err
 type Checker struct {
 	cluster clusterService
 	client  *github.Client
+	version string
 }
 
 // NewChecker returns a new Checker.
-func NewChecker(cluster clusterService) (*Checker, error) {
-	updateURL, err := url.Parse("https://update.traefik.io/")
-	if err != nil {
-		return nil, fmt.Errorf("parse URL: %w", err)
-	}
-
-	githubClient := github.NewClient(&http.Client{Transport: &addHeaderTransport{http.DefaultTransport}})
+func NewChecker(cluster clusterService) *Checker {
+	githubClient := github.NewClient(&http.Client{Transport: &addHeaderTransport{RoundTripper: http.DefaultTransport}})
 	githubClient.UserAgent = userAgent()
-	githubClient.BaseURL = updateURL
+	githubClient.BaseURL, _ = url.Parse("https://update.traefik.io/")
 
-	return &Checker{cluster: cluster, client: githubClient}, nil
+	return &Checker{cluster: cluster, client: githubClient, version: version}
 }
 
 // Start starts the check of the agent version.
@@ -100,7 +96,7 @@ func (c Checker) Start(ctx context.Context) error {
 
 // check Checks if a new version is available.
 func (c Checker) check(ctx context.Context) error {
-	if version == defaultVersion {
+	if c.version == defaultVersion {
 		return nil
 	}
 
@@ -141,11 +137,11 @@ func (c Checker) getStatus(ctx context.Context) (Status, error) {
 		return Status{}, fmt.Errorf("parse version: %w", err)
 	}
 
-	currentVersion, err := goversion.NewSemver(version)
+	currentVersion, err := goversion.NewSemver(c.version)
 	// not a valid tag.
 	if err != nil {
 		return Status{
-			CurrentVersion: version,
+			CurrentVersion: c.version,
 			LastVersion:    lastVersion.Original(),
 		}, nil
 	}
@@ -153,14 +149,14 @@ func (c Checker) getStatus(ctx context.Context) (Status, error) {
 	// outdated version.
 	if lastVersion.GreaterThan(currentVersion) {
 		return Status{
-			CurrentVersion: version,
+			CurrentVersion: c.version,
 			LastVersion:    lastVersion.Original(),
 		}, nil
 	}
 
 	return Status{
 		UpToDate:       true,
-		CurrentVersion: version,
-		LastVersion:    version,
+		CurrentVersion: c.version,
+		LastVersion:    c.version,
 	}, nil
 }
