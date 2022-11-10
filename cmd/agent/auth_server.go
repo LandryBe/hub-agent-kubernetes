@@ -26,6 +26,10 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/go-chi/chi/v5"
+
+	"github.com/traefik/hub-agent-kubernetes/pkg/apiportal"
+
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/traefik/hub-agent-kubernetes/pkg/acp/auth"
@@ -120,22 +124,27 @@ func (c authServerCmd) run(cliCtx *cli.Context) error {
 
 	go acpWatcher.Run(cliCtx.Context)
 
+	apiPortalswitcher := apiportal.NewHandlerSwitcher()
+	apiPortalWatcher := apiportal.NewWatcher(apiPortalswitcher, apiportal.FakeClient{})
+	go apiPortalWatcher.Run(cliCtx.Context)
+
 	listenAddr := cliCtx.String("listen-addr")
 
-	mux := http.NewServeMux()
-
-	mux.Handle("/_live", http.HandlerFunc(func(rw http.ResponseWriter, request *http.Request) {
+	router := chi.NewRouter()
+	router.Handle("/_live", http.HandlerFunc(func(rw http.ResponseWriter, request *http.Request) {
 		rw.WriteHeader(http.StatusOK)
 	}))
-	mux.Handle("/_ready", http.HandlerFunc(func(rw http.ResponseWriter, request *http.Request) {
+	router.Handle("/_ready", http.HandlerFunc(func(rw http.ResponseWriter, request *http.Request) {
 		rw.WriteHeader(http.StatusOK)
 	}))
 
-	mux.Handle("/", switcher)
+	router.Mount("/.openapi", apiPortalswitcher)
+
+	router.Handle("/", switcher)
 
 	server := &http.Server{
 		Addr:              listenAddr,
-		Handler:           mux,
+		Handler:           router,
 		ErrorLog:          stdlog.New(log.Logger.Level(zerolog.DebugLevel), "", 0),
 		ReadHeaderTimeout: 2 * time.Second,
 	}

@@ -557,7 +557,8 @@ func buildIngress(edgeIng *hubv1alpha1.EdgeIngress, ing *netv1.Ingress, ingressC
 		IngressClassName: pointer.StringPtr(ingressClassName),
 		TLS: []netv1.IngressTLS{
 			{
-				Hosts: []string{edgeIng.Status.Domain},
+				SecretName: secretName,
+				Hosts:      []string{edgeIng.Status.Domain},
 			},
 		},
 		Rules: []netv1.IngressRule{

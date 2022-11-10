@@ -61,17 +61,32 @@ func (f *Fetcher) getServices() (map[string]*Service, error) {
 		sort.Strings(externalIPs)
 
 		svcName := objectKey(service.Name, service.Namespace)
-		svcs[svcName] = &Service{
+
+		svc := &Service{
 			Name:          service.Name,
 			Namespace:     service.Namespace,
 			Annotations:   sanitizeAnnotations(service.Annotations),
 			Type:          service.Spec.Type,
 			ExternalIPs:   externalIPs,
 			ExternalPorts: externalPorts,
+			// set an annotation to know the openapi path / port (by default .openapi 80 for example)
+			OpenAPIPath: "openapi-spec.json",
 		}
+
+		if validateOpenAPI(svc) {
+			svc.OpenAPIStatus = true
+		}
+
+		svcs[svcName] = svc
 	}
 
 	return svcs, nil
+}
+
+func validateOpenAPI(svc *Service) bool {
+	// call svc.Name+"."+svc.Namespace+".cluster.local" and check the openAPI format
+
+	return true
 }
 
 // GetServiceLogs returns the logs from a service.

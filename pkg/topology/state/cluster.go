@@ -42,12 +42,16 @@ type ResourceMeta struct {
 
 // Service describes a Service.
 type Service struct {
-	Name          string             `json:"name"`
-	Namespace     string             `json:"namespace"`
-	Type          corev1.ServiceType `json:"type"`
-	Annotations   map[string]string  `json:"annotations,omitempty"`
-	ExternalIPs   []string           `json:"externalIPs,omitempty"`
-	ExternalPorts []int              `json:"externalPorts,omitempty"`
+	Name            string             `json:"name"`
+	Namespace       string             `json:"namespace"`
+	Type            corev1.ServiceType `json:"type"`
+	Annotations     map[string]string  `json:"annotations,omitempty"`
+	ExternalIPs     []string           `json:"externalIPs,omitempty"`
+	ExternalPorts   []int              `json:"externalPorts,omitempty"`
+	OpenAPIPath     string             `json:"openApiPath"`
+	OpenApiPathPort int                `json:"openApiPathPort"`
+	// show if the openAPI spec is readable
+	OpenAPIStatus bool `json:"openApiStatus"`
 }
 
 // IngressMeta represents the common Ingress metadata properties.
