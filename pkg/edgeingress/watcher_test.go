@@ -219,7 +219,8 @@ func Test_WatcherRun(t *testing.T) {
 			IngressClassName: pointer.StringPtr("traefik-hub"),
 			TLS: []netv1.IngressTLS{
 				{
-					Hosts: []string{edgeIngress.Domain},
+					Hosts:      []string{edgeIngress.Domain},
+					SecretName: secretName,
 				},
 			},
 			Rules: []netv1.IngressRule{
@@ -387,7 +388,8 @@ func Test_WatcherRun_handle_custom_domains(t *testing.T) {
 		IngressClassName: pointer.StringPtr("traefik-hub"),
 		TLS: []netv1.IngressTLS{
 			{
-				Hosts: []string{wantEdgeIngress.Domain},
+				Hosts:      []string{wantEdgeIngress.Domain},
+				SecretName: secretName,
 			},
 			{
 				SecretName: secretCustomDomainsName + "-" + wantEdgeIngress.Name,

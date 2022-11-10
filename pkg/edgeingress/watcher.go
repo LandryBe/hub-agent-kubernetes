@@ -22,6 +22,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -67,6 +68,9 @@ type WatcherConfig struct {
 // Watcher watches hub EdgeIngresses and sync them with the cluster.
 type Watcher struct {
 	config WatcherConfig
+
+	wildCardCert   Certificate
+	wildCardCertMu sync.RWMutex
 
 	client           PlatformClient
 	hubClientSet     hubclientset.Interface
@@ -132,9 +136,22 @@ func (w *Watcher) syncCertificate(ctx context.Context) error {
 		return fmt.Errorf("get certificate: %w", err)
 	}
 
+	w.wildCardCertMu.RLock()
+	if bytes.Equal(certificate.Certificate, w.wildCardCert.Certificate) &&
+		bytes.Equal(certificate.PrivateKey, w.wildCardCert.PrivateKey) {
+		w.wildCardCertMu.RUnlock()
+
+		return nil
+	}
+	w.wildCardCertMu.RUnlock()
+
 	if err = w.upsertSecret(ctx, certificate, secretName, w.config.AgentNamespace); err != nil {
 		return fmt.Errorf("upsert secret: %w", err)
 	}
+
+	w.wildCardCertMu.Lock()
+	w.wildCardCert = certificate
+	w.wildCardCertMu.Unlock()
 
 	return w.createIngressCatchAll(ctx)
 }
@@ -208,6 +225,14 @@ func (w *Watcher) syncChildAndUpdateConnectionStatus(ctx context.Context, edgeIn
 		}
 	}
 
+	w.wildCardCertMu.RLock()
+	certificate := w.wildCardCert
+	w.wildCardCertMu.RUnlock()
+
+	if err := w.upsertSecret(ctx, certificate, secretName, edgeIngress.Namespace); err != nil {
+		return fmt.Errorf("upsert secret: %w", err)
+	}
+
 	if len(customDomainsName) > 0 {
 		cert, err := w.client.GetCertificateByDomains(ctx, customDomainsName)
 		if err != nil {
@@ -266,6 +291,10 @@ func (w *Watcher) upsertIngress(ctx context.Context, edgeIng *hubv1alpha1.EdgeIn
 }
 
 func (w *Watcher) createIngressCatchAll(ctx context.Context) error {
+	if w.traefikClientSet == nil {
+		return nil
+	}
+
 	stripPrefix := &traefikv1alpha1.Middleware{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "strip-prefix-catch-all",
@@ -557,7 +586,8 @@ func buildIngress(edgeIng *hubv1alpha1.EdgeIngress, ing *netv1.Ingress, ingressC
 		IngressClassName: pointer.StringPtr(ingressClassName),
 		TLS: []netv1.IngressTLS{
 			{
-				Hosts: []string{edgeIng.Status.Domain},
+				SecretName: secretName,
+				Hosts:      []string{edgeIng.Status.Domain},
 			},
 		},
 		Rules: []netv1.IngressRule{
