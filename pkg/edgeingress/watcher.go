@@ -181,7 +181,7 @@ func (w *Watcher) syncCertificates(ctx context.Context) error {
 		}
 	}
 
-	for ns, _ := range edgeIngressByNamespace {
+	for ns := range edgeIngressByNamespace {
 		if err := w.upsertSecret(ctx, certificate, secretName, ns, nil); err != nil {
 			return fmt.Errorf("upsert secret: %w", err)
 		}

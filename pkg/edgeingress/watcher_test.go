@@ -162,7 +162,6 @@ func Test_WatcherRun(t *testing.T) {
 		Get(ctx, "toDelete", metav1.GetOptions{})
 	require.Error(t, err)
 
-	var wantOwner []metav1.OwnerReference
 	for _, edgeIngress := range edgeIngresses {
 		edgeIng, errL := clientSetHub.HubV1alpha1().
 			EdgeIngresses(edgeIngress.Namespace).
@@ -248,13 +247,6 @@ func Test_WatcherRun(t *testing.T) {
 				},
 			},
 		}, ing.Spec)
-
-		wantOwner = append(wantOwner, metav1.OwnerReference{
-			APIVersion: "hub.traefik.io/v1alpha1",
-			Kind:       "EdgeIngress",
-			Name:       edgeIng.Name,
-			UID:        edgeIng.UID,
-		})
 	}
 }
 
