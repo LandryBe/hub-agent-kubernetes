@@ -269,7 +269,7 @@ func traefikClient(clientSet *clientset.Clientset, config *rest.Config) (v1alpha
 	}
 
 	if !hasMiddlewareCRD {
-		return nil, err
+		return nil, nil
 	}
 
 	traefikClientSet, errClientSet := traefikclientset.NewForConfig(config)
@@ -341,7 +341,7 @@ func hasMiddlewareCRD(clientSet discovery.DiscoveryInterface) (bool, error) {
 	crdList, err := clientSet.ServerResourcesForGroupVersion(traefikv1alpha1.SchemeGroupVersion.String())
 	if err != nil {
 		if kerror.IsNotFound(err) ||
-			// because the fake client doesn't return the right error type.
+			// Because the fake client doesn't return the right error type.
 			strings.HasSuffix(err.Error(), " not found") {
 			return false, nil
 		}
