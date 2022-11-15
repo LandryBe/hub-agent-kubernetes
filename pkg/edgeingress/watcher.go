@@ -153,37 +153,18 @@ func (w *Watcher) syncCertificates(ctx context.Context) error {
 	w.wildCardCert = certificate
 	w.wildCardCertMu.Unlock()
 
-	platformEdgeIngresses, err := w.client.GetEdgeIngresses(ctx)
+	platformEdgeIngresses, err := w.hubInformer.Hub().V1alpha1().EdgeIngresses().Lister().List(labels.Everything())
 	if err != nil {
 		return err
 	}
 
-	edgeIngressByNamespace := map[string]struct{}{}
 	for _, edgeIngress := range platformEdgeIngresses {
-		edgeIngressByNamespace[edgeIngress.Namespace] = struct{}{}
-
-		var customDomainsName []string
-		for _, customDomain := range edgeIngress.CustomDomains {
-			if customDomain.Verified {
-				customDomainsName = append(customDomainsName, customDomain.Name)
-			}
-		}
-
-		if len(edgeIngress.CustomDomains) > 0 {
-			cert, err := w.client.GetCertificateByDomains(ctx, customDomainsName)
-			if err != nil {
-				return fmt.Errorf("get certificate by domains %q: %w", strings.Join(customDomainsName, ","), err)
-			}
-
-			if err := w.upsertSecret(ctx, cert, secretCustomDomainsName+"-"+edgeIngress.Name, edgeIngress.Namespace, nil); err != nil {
-				return fmt.Errorf("upsert secret: %w", err)
-			}
-		}
-	}
-
-	for ns := range edgeIngressByNamespace {
-		if err := w.upsertSecret(ctx, certificate, secretName, ns, nil); err != nil {
-			return fmt.Errorf("upsert secret: %w", err)
+		err := w.setupCertificates(ctx, edgeIngress, certificate, edgeIngress.Status.CustomDomains)
+		if err != nil {
+			log.Error().Err(err).
+				Str("name", edgeIngress.Name).
+				Str("namespace", edgeIngress.Namespace).
+				Msg("unable to setup certificates")
 		}
 	}
 
@@ -263,19 +244,8 @@ func (w *Watcher) syncChildAndUpdateConnectionStatus(ctx context.Context, edgeIn
 	certificate := w.wildCardCert
 	w.wildCardCertMu.RUnlock()
 
-	if err := w.upsertSecret(ctx, certificate, secretName, edgeIngress.Namespace, edgeIngress); err != nil {
-		return fmt.Errorf("upsert secret: %w", err)
-	}
-
-	if len(customDomainsName) > 0 {
-		cert, err := w.client.GetCertificateByDomains(ctx, customDomainsName)
-		if err != nil {
-			return fmt.Errorf("get certificate by domains %q: %w", strings.Join(customDomainsName, ","), err)
-		}
-
-		if err := w.upsertSecret(ctx, cert, secretCustomDomainsName+"-"+edgeIngress.Name, edgeIngress.Namespace, edgeIngress); err != nil {
-			return fmt.Errorf("upsert secret: %w", err)
-		}
+	if err := w.setupCertificates(ctx, edgeIngress, certificate, customDomainsName); err != nil {
+		return fmt.Errorf("unable to setup secrets: %w", err)
 	}
 
 	if err := w.upsertIngress(ctx, edgeIngress, customDomainsName); err != nil {
@@ -284,6 +254,27 @@ func (w *Watcher) syncChildAndUpdateConnectionStatus(ctx context.Context, edgeIn
 
 	if err := w.setEdgeIngressConnectionStatusUP(ctx, edgeIngress); err != nil {
 		return fmt.Errorf("update edge ingress status: %w", err)
+	}
+
+	return nil
+}
+
+func (w *Watcher) setupCertificates(ctx context.Context, edgeIngress *hubv1alpha1.EdgeIngress, certificate Certificate, customDomainsName []string) error {
+	if err := w.upsertSecret(ctx, certificate, secretName, edgeIngress.Namespace, edgeIngress); err != nil {
+		return fmt.Errorf("upsert secret: %w", err)
+	}
+
+	if len(customDomainsName) == 0 {
+		return nil
+	}
+
+	cert, err := w.client.GetCertificateByDomains(ctx, customDomainsName)
+	if err != nil {
+		return fmt.Errorf("get certificate by domains %q: %w", strings.Join(customDomainsName, ","), err)
+	}
+
+	if err := w.upsertSecret(ctx, cert, secretCustomDomainsName+"-"+edgeIngress.Name, edgeIngress.Namespace, edgeIngress); err != nil {
+		return fmt.Errorf("upsert secret: %w", err)
 	}
 
 	return nil
