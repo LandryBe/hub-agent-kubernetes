@@ -336,7 +336,7 @@ func TestHandler_ServeHTTP_updateOperation(t *testing.T) {
 				Domain:     "majestic-beaver-123.hub-traefik.io",
 				URLs:       "https://majestic-beaver-123.hub-traefik.io",
 				SyncedAt:   now,
-				SpecHash:   "1AI6Wssn12E2icVo1NMreqOJSNU=",
+				SpecHash:   "ckcEOKdkROXWIZnEXuMt/1PRQSc=",
 				Connection: hubv1alpha1.EdgeIngressConnectionDown,
 			}},
 		}),
