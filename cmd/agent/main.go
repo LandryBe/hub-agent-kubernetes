@@ -52,6 +52,7 @@ func run() error {
 			newRefreshConfigCmd().build(),
 			newTunnelCmd().build(),
 			newVersionCmd().build(),
+			newDevPortalCmd().build(),
 		},
 	}
 
