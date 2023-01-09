@@ -43,7 +43,7 @@ type devPortalCmd struct {
 func newDevPortalCmd() devPortalCmd {
 	flgs := []cli.Flag{
 		&cli.StringFlag{
-			Name:    "listen-addr",
+			Name:    flagListenAddr,
 			Usage:   "Address on which the dev portal listens",
 			EnvVars: []string{"DEV_PORTAL_LISTEN_ADDR"},
 			Value:   "0.0.0.0:80",
@@ -67,7 +67,7 @@ func (c devPortalCmd) build() *cli.Command {
 }
 
 func (c devPortalCmd) run(cliCtx *cli.Context) error {
-	logger.Setup(cliCtx.String("log-level"), cliCtx.String("log-format"))
+	logger.Setup(cliCtx.String(flagLogLevel), cliCtx.String(flagLogFormat))
 
 	version.Log()
 
@@ -96,7 +96,7 @@ func (c devPortalCmd) run(cliCtx *cli.Context) error {
 
 	go catalogWatcher.Run(cliCtx.Context)
 
-	listenAddr := cliCtx.String("listen-addr")
+	listenAddr := cliCtx.String(flagListenAddr)
 
 	mux := http.NewServeMux()
 

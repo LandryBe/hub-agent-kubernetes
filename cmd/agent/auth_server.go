@@ -47,7 +47,7 @@ type authServerCmd struct {
 func newAuthServerCmd() authServerCmd {
 	flgs := []cli.Flag{
 		&cli.StringFlag{
-			Name:    "listen-addr",
+			Name:    flagListenAddr,
 			Usage:   "Address on which the auth server listens for auth requests",
 			EnvVars: []string{"AUTH_SERVER_LISTEN_ADDR"},
 			Value:   "0.0.0.0:80",
@@ -71,7 +71,7 @@ func (c authServerCmd) build() *cli.Command {
 }
 
 func (c authServerCmd) run(cliCtx *cli.Context) error {
-	logger.Setup(cliCtx.String("log-level"), cliCtx.String("log-format"))
+	logger.Setup(cliCtx.String(flagLogLevel), cliCtx.String(flagLogFormat))
 
 	version.Log()
 
@@ -120,7 +120,7 @@ func (c authServerCmd) run(cliCtx *cli.Context) error {
 
 	go acpWatcher.Run(cliCtx.Context)
 
-	listenAddr := cliCtx.String("listen-addr")
+	listenAddr := cliCtx.String(flagListenAddr)
 
 	mux := http.NewServeMux()
 

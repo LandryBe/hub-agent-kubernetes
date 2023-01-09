@@ -30,8 +30,9 @@ import (
 )
 
 const (
-	flagLogLevel  = "log-level"
-	flagLogFormat = "log-format"
+	flagLogLevel   = "log-level"
+	flagLogFormat  = "log-format"
+	flagListenAddr = "listen-addr"
 )
 
 func main() {
