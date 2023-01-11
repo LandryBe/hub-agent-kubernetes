@@ -203,7 +203,7 @@ func (w *Watcher) buildRoute(name string, c *catalog.Catalog) http.Handler {
 		if err := json.NewEncoder(rw).Encode(services); err != nil {
 			log.Error().Err(err).
 				Str("catalog_name", name).
-				Msg("encode services")
+				Msg("Encode services")
 		}
 	})
 	router.Get("/services/{service}", func(rw http.ResponseWriter, req *http.Request) {
@@ -214,7 +214,7 @@ func (w *Watcher) buildRoute(name string, c *catalog.Catalog) http.Handler {
 			log.Debug().
 				Str("catalog_name", name).
 				Str("service_name", svcName).
-				Msg("service not found")
+				Msg("Service not found")
 			rw.WriteHeader(http.StatusNotFound)
 
 			return
@@ -226,7 +226,7 @@ func (w *Watcher) buildRoute(name string, c *catalog.Catalog) http.Handler {
 				Str("catalog_name", name).
 				Str("service_name", svcName).
 				Str("url", u).
-				Msg("new request")
+				Msg("New request")
 			rw.WriteHeader(http.StatusInternalServerError)
 
 			return
@@ -234,8 +234,25 @@ func (w *Watcher) buildRoute(name string, c *catalog.Catalog) http.Handler {
 
 		resp, err := w.httpClient.Do(r)
 		if err != nil {
-			rw.WriteHeader(http.StatusInternalServerError)
-			_, _ = fmt.Fprint(rw, err)
+			rw.WriteHeader(http.StatusBadGateway)
+			log.Error().Err(err).
+				Str("catalog_name", name).
+				Str("service_name", svcName).
+				Str("url", u).
+				Msg("Do request")
+
+			return
+		}
+
+		if resp.StatusCode < 200 || resp.StatusCode > 300 {
+			rw.WriteHeader(http.StatusBadGateway)
+			log.Error().Err(err).
+				Str("catalog_name", name).
+				Str("service_name", svcName).
+				Str("url", u).
+				Int("status_code", resp.StatusCode).
+				Msg("Unexpected status code")
+
 			return
 		}
 
@@ -246,7 +263,7 @@ func (w *Watcher) buildRoute(name string, c *catalog.Catalog) http.Handler {
 				Str("catalog_name", name).
 				Str("service_name", svcName).
 				Str("url", u).
-				Msg("copy content")
+				Msg("Copy content")
 		}
 	})
 
