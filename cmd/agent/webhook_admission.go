@@ -80,7 +80,7 @@ func devPortalFlags() []cli.Flag {
 		},
 		&cli.IntFlag{
 			Name:    flagDevPortalPort,
-			Usage:   "Port used by of the Dev Portal service",
+			Usage:   "Port used by the Dev Portal service",
 			EnvVars: []string{strcase.ToSNAKE(flagACPServerAuthServerAddr)},
 			Value:   80,
 		},
