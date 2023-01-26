@@ -188,7 +188,9 @@ func webhookAdmission(ctx context.Context, cliCtx *cli.Context, platformClient *
 
 	router := chi.NewRouter()
 	router.Handle("/edge-ingress", edgeIngressAdmission)
-	router.Handle("/catalog", catalogAdmission)
+	if catalogAdmission != nil {
+		router.Handle("/catalog", catalogAdmission)
+	}
 	router.Handle("/ingress", acpAdmission)
 	router.Handle("/acp", webAdmissionACP)
 
@@ -299,7 +301,9 @@ func setupAdmissionHandlers(ctx context.Context, platformClient *platform.Client
 	go acpWatcher.Run(ctx)
 	go ingressUpdater.Run(ctx)
 	go edgeIngressWatcher.Run(ctx)
-	go catalogWatcher.Run(ctx)
+	if catalog.IsAvailable(kubeClientSet) {
+		go catalogWatcher.Run(ctx)
+	}
 
 	polGetter := reviewer.NewPolGetter(hubInformer)
 
@@ -312,7 +316,12 @@ func setupAdmissionHandlers(ctx context.Context, platformClient *platform.Client
 		traefikReviewer,
 	}
 
-	return admission.NewHandler(reviewers, traefikReviewer), edgeadmission.NewHandler(platformClient), catalogadmission.NewHandler(platformClient, oasRegistry), nil
+	var catalogHandler http.Handler
+	if catalog.IsAvailable(kubeClientSet) {
+		catalogHandler = catalogadmission.NewHandler(platformClient, oasRegistry)
+	}
+
+	return admission.NewHandler(reviewers, traefikReviewer), edgeadmission.NewHandler(platformClient), catalogHandler, nil
 }
 
 func createTraefikClientSet(clientSet *clientset.Clientset, config *rest.Config) (v1alpha1.TraefikV1alpha1Interface, error) {
