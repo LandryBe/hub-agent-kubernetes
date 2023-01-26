@@ -18,15 +18,12 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 package catalog
 
 import (
-	"context"
 	"fmt"
 	"strings"
 	"time"
 
-	"github.com/rs/zerolog/log"
 	hubv1alpha1 "github.com/traefik/hub-agent-kubernetes/pkg/crd/api/hub/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	clientset "k8s.io/client-go/kubernetes"
 )
 
 // Catalog is a catalog of services exposed through a unified API.
@@ -105,19 +102,4 @@ func (e *Catalog) Resource(oasRegistry OASRegistry) (*hubv1alpha1.Catalog, error
 			Services: serviceStatuses,
 		},
 	}, nil
-}
-
-// IsAvailable returns true if the catalog CRD is available.
-func IsAvailable(kubeClientSet clientset.Interface) bool {
-	err := kubeClientSet.Discovery().RESTClient().
-		Get().
-		Resource("customresourcedefinitions").
-		Name("catalog").
-		Do(context.Background()).
-		Error()
-	if err != nil {
-		log.Warn().Err(err).Msg("Unable to check if Catalog CRD is available, ignoring Catalogs features")
-	}
-
-	return err == nil
 }

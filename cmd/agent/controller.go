@@ -174,10 +174,18 @@ func (c controllerCmd) run(cliCtx *cli.Context) error {
 		}
 
 		group.Go(func() error {
-			return mtrcsMgr.Run(ctx)
+			errMetrics := mtrcsMgr.Run(ctx)
+			log.Error().Err(errMetrics).Msg("metrics stopped")
+
+			return errMetrics
 		})
 
-		group.Go(func() error { return runAlerting(ctx, token, platformURL, mtrcsStore, topoFetcher) })
+		group.Go(func() error {
+			errAlert := runAlerting(ctx, token, platformURL, mtrcsStore, topoFetcher)
+			log.Error().Err(errAlert).Msg("alerts stopped")
+
+			return errAlert
+		})
 	}
 
 	group.Go(func() error {
@@ -186,15 +194,17 @@ func (c controllerCmd) run(cliCtx *cli.Context) error {
 	})
 
 	group.Go(func() error {
-		return webhookAdmission(ctx, cliCtx, platformClient, topoWatch)
+		errWebhook := webhookAdmission(ctx, cliCtx, platformClient, topoWatch)
+		log.Error().Err(errWebhook).Msg("webhook stopped")
+
+		return errWebhook
 	})
 
 	group.Go(func() error {
-		if err := checker.Start(ctx); err != nil {
-			return err
-		}
+		errChecker := checker.Start(ctx)
+		log.Error().Err(errChecker).Msg("checker stopped")
 
-		return nil
+		return errChecker
 	})
 
 	group.Go(func() error {
@@ -202,7 +212,10 @@ func (c controllerCmd) run(cliCtx *cli.Context) error {
 		return nil
 	})
 
-	return group.Wait()
+	errWait := group.Wait()
+	log.Error().Err(errWait).Msg("group wait stopped")
+
+	return errWait
 }
 
 func setupOIDCSecret(cliCtx *cli.Context, client clientset.Interface, token string) error {
