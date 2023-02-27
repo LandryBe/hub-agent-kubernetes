@@ -121,6 +121,25 @@ type UpdateGatewayReq struct {
 	CustomDomains []string          `json:"customDomains"`
 }
 
+// CreateAPIReq is the request for creating an API.
+type CreateAPIReq struct {
+	Name      string `json:"name"`
+	Namespace string `json:"namespace"`
+
+	Labels map[string]string `json:"labels,omitempty"`
+
+	PathPrefix string  `json:"pathPrefix" bson:"pathPrefix"`
+	Service    Service `json:"service" bson:"service"`
+}
+
+// UpdateAPIReq is a request for updating an API.
+type UpdateAPIReq struct {
+	Labels map[string]string `json:"labels,omitempty"`
+
+	PathPrefix string  `json:"pathPrefix" bson:"pathPrefix"`
+	Service    Service `json:"service" bson:"service"`
+}
+
 // Command defines patch operation to apply on the cluster.
 type Command struct {
 	ID        string          `json:"id"`
@@ -868,6 +887,55 @@ func (c *Client) SubmitCommandReports(ctx context.Context, reports []CommandExec
 		}
 
 		return apiErr
+	}
+
+	return nil
+}
+
+// CreateAPI creates an API.
+func (c *Client) CreateAPI(ctx context.Context, createReq *CreateAPIReq) (*api.API, error) {
+	body, err := json.Marshal(createReq)
+	if err != nil {
+		return nil, fmt.Errorf("marshal api request: %w", err)
+	}
+
+	var a api.API
+	if err = c.createResource(ctx, "apis", body, &a); err != nil {
+		return nil, fmt.Errorf("create api: %w", err)
+	}
+
+	return &a, nil
+}
+
+// GetAPIs fetches the APIs available for this agent.
+func (c *Client) GetAPIs(ctx context.Context) ([]api.API, error) {
+	var apis []api.API
+	if err := c.listResource(ctx, "apis", &apis); err != nil {
+		return nil, fmt.Errorf("list apis: %w", err)
+	}
+
+	return apis, nil
+}
+
+// UpdateAPI updates a portal.
+func (c *Client) UpdateAPI(ctx context.Context, namespace, name, lastKnownVersion string, updateReq *UpdateAPIReq) (*api.API, error) {
+	body, err := json.Marshal(updateReq)
+	if err != nil {
+		return nil, fmt.Errorf("marshal api request: %w", err)
+	}
+
+	var a api.API
+	if err = c.updateResource(ctx, "apis", name+"@"+namespace, lastKnownVersion, body, &a); err != nil {
+		return nil, fmt.Errorf("update api: %w", err)
+	}
+
+	return &a, nil
+}
+
+// DeleteAPI deletes a api.
+func (c *Client) DeleteAPI(ctx context.Context, namespace, name, lastKnownVersion string) error {
+	if err := c.deleteResource(ctx, "apis", name+"@"+namespace, lastKnownVersion); err != nil {
+		return fmt.Errorf("delete api: %w", err)
 	}
 
 	return nil

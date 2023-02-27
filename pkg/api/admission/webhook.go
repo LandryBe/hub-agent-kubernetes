@@ -40,6 +40,9 @@ type PlatformClient interface {
 	CreateGateway(ctx context.Context, createReq *platform.CreateGatewayReq) (*api.Gateway, error)
 	UpdateGateway(ctx context.Context, name, lastKnownVersion string, updateReq *platform.UpdateGatewayReq) (*api.Gateway, error)
 	DeleteGateway(ctx context.Context, name, lastKnownVersion string) error
+	CreateAPI(ctx context.Context, req *platform.CreateAPIReq) (*api.API, error)
+	UpdateAPI(ctx context.Context, namespace, name, lastKnownVersion string, req *platform.UpdateAPIReq) (*api.API, error)
+	DeleteAPI(ctx context.Context, namespace, name, lastKnownVersion string) error
 }
 
 // Handler is an HTTP handler that can be used as a Kubernetes Mutating Admission Controller.
@@ -79,7 +82,7 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 	patches, err := h.review(ctx, ar.Request)
 	if err != nil {
-		log.Ctx(ctx).Error().Err(err).Msg("Unable to handle admission request")
+		log.Ctx(ctx).Error().Err(err).Msg("Unable to handle APIPortal admission request")
 
 		setReviewErrorResponse(&ar, err)
 	} else {
@@ -110,15 +113,17 @@ func (h *Handler) review(ctx context.Context, req *admv1.AdmissionRequest) ([]by
 		return nil, nil
 	}
 
-	newPortal, oldPortal, err := parseRawPortals(req.Object.Raw, req.OldObject.Raw)
-	if err != nil {
-		return nil, fmt.Errorf("parse raw objects: %w", err)
+	var newPortal, oldPortal *hubv1alpha1.APIPortal
+	if err := parseRaw(req.Object.Raw, &newPortal); err != nil {
+		return nil, fmt.Errorf("parse raw API: %w", err)
+	}
+	if err := parseRaw(req.OldObject.Raw, &oldPortal); err != nil {
+		return nil, fmt.Errorf("parse raw API: %w", err)
 	}
 
 	// Skip the review if the APIPortal hasn't changed since the last platform sync.
 	if newPortal != nil {
-		var portalHash string
-		portalHash, err = api.HashPortal(newPortal)
+		portalHash, err := api.HashPortal(newPortal)
 		if err != nil {
 			return nil, fmt.Errorf("compute APIPortal hash: %w", err)
 		}
@@ -200,23 +205,6 @@ func (h *Handler) buildPatches(p *api.Portal) ([]byte, error) {
 	return json.Marshal([]patch{
 		{Op: "replace", Path: "/status", Value: res.Status},
 	})
-}
-
-// parseRawPortals parses raw objects from admission requests into APIPortal resources.
-func parseRawPortals(newRaw, oldRaw []byte) (newPortal, oldPortal *hubv1alpha1.APIPortal, err error) {
-	if newRaw != nil {
-		if err = json.Unmarshal(newRaw, &newPortal); err != nil {
-			return nil, nil, fmt.Errorf("unmarshal reviewed APIPortal: %w", err)
-		}
-	}
-
-	if oldRaw != nil {
-		if err = json.Unmarshal(oldRaw, &oldPortal); err != nil {
-			return nil, nil, fmt.Errorf("unmarshal reviewed old APIPortal: %w", err)
-		}
-	}
-
-	return newPortal, oldPortal, nil
 }
 
 func setReviewErrorResponse(ar *admv1.AdmissionReview, err error) {

@@ -27,6 +27,162 @@ func newPlatformClientMock(tb testing.TB) *platformClientMock {
 	return m
 }
 
+func (_m *platformClientMock) CreateAPI(_ context.Context, req *platform.CreateAPIReq) (*api.API, error) {
+	_ret := _m.Called(req)
+
+	if _rf, ok := _ret.Get(0).(func(*platform.CreateAPIReq) (*api.API, error)); ok {
+		return _rf(req)
+	}
+
+	_ra0, _ := _ret.Get(0).(*api.API)
+	_rb1 := _ret.Error(1)
+
+	return _ra0, _rb1
+}
+
+func (_m *platformClientMock) OnCreateAPI(req *platform.CreateAPIReq) *platformClientCreateAPICall {
+	return &platformClientCreateAPICall{Call: _m.Mock.On("CreateAPI", req), Parent: _m}
+}
+
+func (_m *platformClientMock) OnCreateAPIRaw(req interface{}) *platformClientCreateAPICall {
+	return &platformClientCreateAPICall{Call: _m.Mock.On("CreateAPI", req), Parent: _m}
+}
+
+type platformClientCreateAPICall struct {
+	*mock.Call
+	Parent *platformClientMock
+}
+
+func (_c *platformClientCreateAPICall) Panic(msg string) *platformClientCreateAPICall {
+	_c.Call = _c.Call.Panic(msg)
+	return _c
+}
+
+func (_c *platformClientCreateAPICall) Once() *platformClientCreateAPICall {
+	_c.Call = _c.Call.Once()
+	return _c
+}
+
+func (_c *platformClientCreateAPICall) Twice() *platformClientCreateAPICall {
+	_c.Call = _c.Call.Twice()
+	return _c
+}
+
+func (_c *platformClientCreateAPICall) Times(i int) *platformClientCreateAPICall {
+	_c.Call = _c.Call.Times(i)
+	return _c
+}
+
+func (_c *platformClientCreateAPICall) WaitUntil(w <-chan time.Time) *platformClientCreateAPICall {
+	_c.Call = _c.Call.WaitUntil(w)
+	return _c
+}
+
+func (_c *platformClientCreateAPICall) After(d time.Duration) *platformClientCreateAPICall {
+	_c.Call = _c.Call.After(d)
+	return _c
+}
+
+func (_c *platformClientCreateAPICall) Run(fn func(args mock.Arguments)) *platformClientCreateAPICall {
+	_c.Call = _c.Call.Run(fn)
+	return _c
+}
+
+func (_c *platformClientCreateAPICall) Maybe() *platformClientCreateAPICall {
+	_c.Call = _c.Call.Maybe()
+	return _c
+}
+
+func (_c *platformClientCreateAPICall) TypedReturns(a *api.API, b error) *platformClientCreateAPICall {
+	_c.Call = _c.Return(a, b)
+	return _c
+}
+
+func (_c *platformClientCreateAPICall) ReturnsFn(fn func(*platform.CreateAPIReq) (*api.API, error)) *platformClientCreateAPICall {
+	_c.Call = _c.Return(fn)
+	return _c
+}
+
+func (_c *platformClientCreateAPICall) TypedRun(fn func(*platform.CreateAPIReq)) *platformClientCreateAPICall {
+	_c.Call = _c.Call.Run(func(args mock.Arguments) {
+		_req, _ := args.Get(0).(*platform.CreateAPIReq)
+		fn(_req)
+	})
+	return _c
+}
+
+func (_c *platformClientCreateAPICall) OnCreateAPI(req *platform.CreateAPIReq) *platformClientCreateAPICall {
+	return _c.Parent.OnCreateAPI(req)
+}
+
+func (_c *platformClientCreateAPICall) OnCreateGateway(createReq *platform.CreateGatewayReq) *platformClientCreateGatewayCall {
+	return _c.Parent.OnCreateGateway(createReq)
+}
+
+func (_c *platformClientCreateAPICall) OnCreatePortal(req *platform.CreatePortalReq) *platformClientCreatePortalCall {
+	return _c.Parent.OnCreatePortal(req)
+}
+
+func (_c *platformClientCreateAPICall) OnDeleteAPI(namespace string, name string, lastKnownVersion string) *platformClientDeleteAPICall {
+	return _c.Parent.OnDeleteAPI(namespace, name, lastKnownVersion)
+}
+
+func (_c *platformClientCreateAPICall) OnDeleteGateway(name string, lastKnownVersion string) *platformClientDeleteGatewayCall {
+	return _c.Parent.OnDeleteGateway(name, lastKnownVersion)
+}
+
+func (_c *platformClientCreateAPICall) OnDeletePortal(name string, lastKnownVersion string) *platformClientDeletePortalCall {
+	return _c.Parent.OnDeletePortal(name, lastKnownVersion)
+}
+
+func (_c *platformClientCreateAPICall) OnUpdateAPI(namespace string, name string, lastKnownVersion string, req *platform.UpdateAPIReq) *platformClientUpdateAPICall {
+	return _c.Parent.OnUpdateAPI(namespace, name, lastKnownVersion, req)
+}
+
+func (_c *platformClientCreateAPICall) OnUpdateGateway(name string, lastKnownVersion string, updateReq *platform.UpdateGatewayReq) *platformClientUpdateGatewayCall {
+	return _c.Parent.OnUpdateGateway(name, lastKnownVersion, updateReq)
+}
+
+func (_c *platformClientCreateAPICall) OnUpdatePortal(name string, lastKnownVersion string, req *platform.UpdatePortalReq) *platformClientUpdatePortalCall {
+	return _c.Parent.OnUpdatePortal(name, lastKnownVersion, req)
+}
+
+func (_c *platformClientCreateAPICall) OnCreateAPIRaw(req interface{}) *platformClientCreateAPICall {
+	return _c.Parent.OnCreateAPIRaw(req)
+}
+
+func (_c *platformClientCreateAPICall) OnCreateGatewayRaw(createReq interface{}) *platformClientCreateGatewayCall {
+	return _c.Parent.OnCreateGatewayRaw(createReq)
+}
+
+func (_c *platformClientCreateAPICall) OnCreatePortalRaw(req interface{}) *platformClientCreatePortalCall {
+	return _c.Parent.OnCreatePortalRaw(req)
+}
+
+func (_c *platformClientCreateAPICall) OnDeleteAPIRaw(namespace interface{}, name interface{}, lastKnownVersion interface{}) *platformClientDeleteAPICall {
+	return _c.Parent.OnDeleteAPIRaw(namespace, name, lastKnownVersion)
+}
+
+func (_c *platformClientCreateAPICall) OnDeleteGatewayRaw(name interface{}, lastKnownVersion interface{}) *platformClientDeleteGatewayCall {
+	return _c.Parent.OnDeleteGatewayRaw(name, lastKnownVersion)
+}
+
+func (_c *platformClientCreateAPICall) OnDeletePortalRaw(name interface{}, lastKnownVersion interface{}) *platformClientDeletePortalCall {
+	return _c.Parent.OnDeletePortalRaw(name, lastKnownVersion)
+}
+
+func (_c *platformClientCreateAPICall) OnUpdateAPIRaw(namespace interface{}, name interface{}, lastKnownVersion interface{}, req interface{}) *platformClientUpdateAPICall {
+	return _c.Parent.OnUpdateAPIRaw(namespace, name, lastKnownVersion, req)
+}
+
+func (_c *platformClientCreateAPICall) OnUpdateGatewayRaw(name interface{}, lastKnownVersion interface{}, updateReq interface{}) *platformClientUpdateGatewayCall {
+	return _c.Parent.OnUpdateGatewayRaw(name, lastKnownVersion, updateReq)
+}
+
+func (_c *platformClientCreateAPICall) OnUpdatePortalRaw(name interface{}, lastKnownVersion interface{}, req interface{}) *platformClientUpdatePortalCall {
+	return _c.Parent.OnUpdatePortalRaw(name, lastKnownVersion, req)
+}
+
 func (_m *platformClientMock) CreateGateway(_ context.Context, createReq *platform.CreateGatewayReq) (*api.Gateway, error) {
 	_ret := _m.Called(createReq)
 
@@ -111,12 +267,20 @@ func (_c *platformClientCreateGatewayCall) TypedRun(fn func(*platform.CreateGate
 	return _c
 }
 
+func (_c *platformClientCreateGatewayCall) OnCreateAPI(req *platform.CreateAPIReq) *platformClientCreateAPICall {
+	return _c.Parent.OnCreateAPI(req)
+}
+
 func (_c *platformClientCreateGatewayCall) OnCreateGateway(createReq *platform.CreateGatewayReq) *platformClientCreateGatewayCall {
 	return _c.Parent.OnCreateGateway(createReq)
 }
 
 func (_c *platformClientCreateGatewayCall) OnCreatePortal(req *platform.CreatePortalReq) *platformClientCreatePortalCall {
 	return _c.Parent.OnCreatePortal(req)
+}
+
+func (_c *platformClientCreateGatewayCall) OnDeleteAPI(namespace string, name string, lastKnownVersion string) *platformClientDeleteAPICall {
+	return _c.Parent.OnDeleteAPI(namespace, name, lastKnownVersion)
 }
 
 func (_c *platformClientCreateGatewayCall) OnDeleteGateway(name string, lastKnownVersion string) *platformClientDeleteGatewayCall {
@@ -127,12 +291,20 @@ func (_c *platformClientCreateGatewayCall) OnDeletePortal(name string, lastKnown
 	return _c.Parent.OnDeletePortal(name, lastKnownVersion)
 }
 
+func (_c *platformClientCreateGatewayCall) OnUpdateAPI(namespace string, name string, lastKnownVersion string, req *platform.UpdateAPIReq) *platformClientUpdateAPICall {
+	return _c.Parent.OnUpdateAPI(namespace, name, lastKnownVersion, req)
+}
+
 func (_c *platformClientCreateGatewayCall) OnUpdateGateway(name string, lastKnownVersion string, updateReq *platform.UpdateGatewayReq) *platformClientUpdateGatewayCall {
 	return _c.Parent.OnUpdateGateway(name, lastKnownVersion, updateReq)
 }
 
 func (_c *platformClientCreateGatewayCall) OnUpdatePortal(name string, lastKnownVersion string, req *platform.UpdatePortalReq) *platformClientUpdatePortalCall {
 	return _c.Parent.OnUpdatePortal(name, lastKnownVersion, req)
+}
+
+func (_c *platformClientCreateGatewayCall) OnCreateAPIRaw(req interface{}) *platformClientCreateAPICall {
+	return _c.Parent.OnCreateAPIRaw(req)
 }
 
 func (_c *platformClientCreateGatewayCall) OnCreateGatewayRaw(createReq interface{}) *platformClientCreateGatewayCall {
@@ -143,12 +315,20 @@ func (_c *platformClientCreateGatewayCall) OnCreatePortalRaw(req interface{}) *p
 	return _c.Parent.OnCreatePortalRaw(req)
 }
 
+func (_c *platformClientCreateGatewayCall) OnDeleteAPIRaw(namespace interface{}, name interface{}, lastKnownVersion interface{}) *platformClientDeleteAPICall {
+	return _c.Parent.OnDeleteAPIRaw(namespace, name, lastKnownVersion)
+}
+
 func (_c *platformClientCreateGatewayCall) OnDeleteGatewayRaw(name interface{}, lastKnownVersion interface{}) *platformClientDeleteGatewayCall {
 	return _c.Parent.OnDeleteGatewayRaw(name, lastKnownVersion)
 }
 
 func (_c *platformClientCreateGatewayCall) OnDeletePortalRaw(name interface{}, lastKnownVersion interface{}) *platformClientDeletePortalCall {
 	return _c.Parent.OnDeletePortalRaw(name, lastKnownVersion)
+}
+
+func (_c *platformClientCreateGatewayCall) OnUpdateAPIRaw(namespace interface{}, name interface{}, lastKnownVersion interface{}, req interface{}) *platformClientUpdateAPICall {
+	return _c.Parent.OnUpdateAPIRaw(namespace, name, lastKnownVersion, req)
 }
 
 func (_c *platformClientCreateGatewayCall) OnUpdateGatewayRaw(name interface{}, lastKnownVersion interface{}, updateReq interface{}) *platformClientUpdateGatewayCall {
@@ -243,12 +423,20 @@ func (_c *platformClientCreatePortalCall) TypedRun(fn func(*platform.CreatePorta
 	return _c
 }
 
+func (_c *platformClientCreatePortalCall) OnCreateAPI(req *platform.CreateAPIReq) *platformClientCreateAPICall {
+	return _c.Parent.OnCreateAPI(req)
+}
+
 func (_c *platformClientCreatePortalCall) OnCreateGateway(createReq *platform.CreateGatewayReq) *platformClientCreateGatewayCall {
 	return _c.Parent.OnCreateGateway(createReq)
 }
 
 func (_c *platformClientCreatePortalCall) OnCreatePortal(req *platform.CreatePortalReq) *platformClientCreatePortalCall {
 	return _c.Parent.OnCreatePortal(req)
+}
+
+func (_c *platformClientCreatePortalCall) OnDeleteAPI(namespace string, name string, lastKnownVersion string) *platformClientDeleteAPICall {
+	return _c.Parent.OnDeleteAPI(namespace, name, lastKnownVersion)
 }
 
 func (_c *platformClientCreatePortalCall) OnDeleteGateway(name string, lastKnownVersion string) *platformClientDeleteGatewayCall {
@@ -259,12 +447,20 @@ func (_c *platformClientCreatePortalCall) OnDeletePortal(name string, lastKnownV
 	return _c.Parent.OnDeletePortal(name, lastKnownVersion)
 }
 
+func (_c *platformClientCreatePortalCall) OnUpdateAPI(namespace string, name string, lastKnownVersion string, req *platform.UpdateAPIReq) *platformClientUpdateAPICall {
+	return _c.Parent.OnUpdateAPI(namespace, name, lastKnownVersion, req)
+}
+
 func (_c *platformClientCreatePortalCall) OnUpdateGateway(name string, lastKnownVersion string, updateReq *platform.UpdateGatewayReq) *platformClientUpdateGatewayCall {
 	return _c.Parent.OnUpdateGateway(name, lastKnownVersion, updateReq)
 }
 
 func (_c *platformClientCreatePortalCall) OnUpdatePortal(name string, lastKnownVersion string, req *platform.UpdatePortalReq) *platformClientUpdatePortalCall {
 	return _c.Parent.OnUpdatePortal(name, lastKnownVersion, req)
+}
+
+func (_c *platformClientCreatePortalCall) OnCreateAPIRaw(req interface{}) *platformClientCreateAPICall {
+	return _c.Parent.OnCreateAPIRaw(req)
 }
 
 func (_c *platformClientCreatePortalCall) OnCreateGatewayRaw(createReq interface{}) *platformClientCreateGatewayCall {
@@ -275,6 +471,10 @@ func (_c *platformClientCreatePortalCall) OnCreatePortalRaw(req interface{}) *pl
 	return _c.Parent.OnCreatePortalRaw(req)
 }
 
+func (_c *platformClientCreatePortalCall) OnDeleteAPIRaw(namespace interface{}, name interface{}, lastKnownVersion interface{}) *platformClientDeleteAPICall {
+	return _c.Parent.OnDeleteAPIRaw(namespace, name, lastKnownVersion)
+}
+
 func (_c *platformClientCreatePortalCall) OnDeleteGatewayRaw(name interface{}, lastKnownVersion interface{}) *platformClientDeleteGatewayCall {
 	return _c.Parent.OnDeleteGatewayRaw(name, lastKnownVersion)
 }
@@ -283,11 +483,172 @@ func (_c *platformClientCreatePortalCall) OnDeletePortalRaw(name interface{}, la
 	return _c.Parent.OnDeletePortalRaw(name, lastKnownVersion)
 }
 
+func (_c *platformClientCreatePortalCall) OnUpdateAPIRaw(namespace interface{}, name interface{}, lastKnownVersion interface{}, req interface{}) *platformClientUpdateAPICall {
+	return _c.Parent.OnUpdateAPIRaw(namespace, name, lastKnownVersion, req)
+}
+
 func (_c *platformClientCreatePortalCall) OnUpdateGatewayRaw(name interface{}, lastKnownVersion interface{}, updateReq interface{}) *platformClientUpdateGatewayCall {
 	return _c.Parent.OnUpdateGatewayRaw(name, lastKnownVersion, updateReq)
 }
 
 func (_c *platformClientCreatePortalCall) OnUpdatePortalRaw(name interface{}, lastKnownVersion interface{}, req interface{}) *platformClientUpdatePortalCall {
+	return _c.Parent.OnUpdatePortalRaw(name, lastKnownVersion, req)
+}
+
+func (_m *platformClientMock) DeleteAPI(_ context.Context, namespace string, name string, lastKnownVersion string) error {
+	_ret := _m.Called(namespace, name, lastKnownVersion)
+
+	if _rf, ok := _ret.Get(0).(func(string, string, string) error); ok {
+		return _rf(namespace, name, lastKnownVersion)
+	}
+
+	_ra0 := _ret.Error(0)
+
+	return _ra0
+}
+
+func (_m *platformClientMock) OnDeleteAPI(namespace string, name string, lastKnownVersion string) *platformClientDeleteAPICall {
+	return &platformClientDeleteAPICall{Call: _m.Mock.On("DeleteAPI", namespace, name, lastKnownVersion), Parent: _m}
+}
+
+func (_m *platformClientMock) OnDeleteAPIRaw(namespace interface{}, name interface{}, lastKnownVersion interface{}) *platformClientDeleteAPICall {
+	return &platformClientDeleteAPICall{Call: _m.Mock.On("DeleteAPI", namespace, name, lastKnownVersion), Parent: _m}
+}
+
+type platformClientDeleteAPICall struct {
+	*mock.Call
+	Parent *platformClientMock
+}
+
+func (_c *platformClientDeleteAPICall) Panic(msg string) *platformClientDeleteAPICall {
+	_c.Call = _c.Call.Panic(msg)
+	return _c
+}
+
+func (_c *platformClientDeleteAPICall) Once() *platformClientDeleteAPICall {
+	_c.Call = _c.Call.Once()
+	return _c
+}
+
+func (_c *platformClientDeleteAPICall) Twice() *platformClientDeleteAPICall {
+	_c.Call = _c.Call.Twice()
+	return _c
+}
+
+func (_c *platformClientDeleteAPICall) Times(i int) *platformClientDeleteAPICall {
+	_c.Call = _c.Call.Times(i)
+	return _c
+}
+
+func (_c *platformClientDeleteAPICall) WaitUntil(w <-chan time.Time) *platformClientDeleteAPICall {
+	_c.Call = _c.Call.WaitUntil(w)
+	return _c
+}
+
+func (_c *platformClientDeleteAPICall) After(d time.Duration) *platformClientDeleteAPICall {
+	_c.Call = _c.Call.After(d)
+	return _c
+}
+
+func (_c *platformClientDeleteAPICall) Run(fn func(args mock.Arguments)) *platformClientDeleteAPICall {
+	_c.Call = _c.Call.Run(fn)
+	return _c
+}
+
+func (_c *platformClientDeleteAPICall) Maybe() *platformClientDeleteAPICall {
+	_c.Call = _c.Call.Maybe()
+	return _c
+}
+
+func (_c *platformClientDeleteAPICall) TypedReturns(a error) *platformClientDeleteAPICall {
+	_c.Call = _c.Return(a)
+	return _c
+}
+
+func (_c *platformClientDeleteAPICall) ReturnsFn(fn func(string, string, string) error) *platformClientDeleteAPICall {
+	_c.Call = _c.Return(fn)
+	return _c
+}
+
+func (_c *platformClientDeleteAPICall) TypedRun(fn func(string, string, string)) *platformClientDeleteAPICall {
+	_c.Call = _c.Call.Run(func(args mock.Arguments) {
+		_namespace := args.String(0)
+		_name := args.String(1)
+		_lastKnownVersion := args.String(2)
+		fn(_namespace, _name, _lastKnownVersion)
+	})
+	return _c
+}
+
+func (_c *platformClientDeleteAPICall) OnCreateAPI(req *platform.CreateAPIReq) *platformClientCreateAPICall {
+	return _c.Parent.OnCreateAPI(req)
+}
+
+func (_c *platformClientDeleteAPICall) OnCreateGateway(createReq *platform.CreateGatewayReq) *platformClientCreateGatewayCall {
+	return _c.Parent.OnCreateGateway(createReq)
+}
+
+func (_c *platformClientDeleteAPICall) OnCreatePortal(req *platform.CreatePortalReq) *platformClientCreatePortalCall {
+	return _c.Parent.OnCreatePortal(req)
+}
+
+func (_c *platformClientDeleteAPICall) OnDeleteAPI(namespace string, name string, lastKnownVersion string) *platformClientDeleteAPICall {
+	return _c.Parent.OnDeleteAPI(namespace, name, lastKnownVersion)
+}
+
+func (_c *platformClientDeleteAPICall) OnDeleteGateway(name string, lastKnownVersion string) *platformClientDeleteGatewayCall {
+	return _c.Parent.OnDeleteGateway(name, lastKnownVersion)
+}
+
+func (_c *platformClientDeleteAPICall) OnDeletePortal(name string, lastKnownVersion string) *platformClientDeletePortalCall {
+	return _c.Parent.OnDeletePortal(name, lastKnownVersion)
+}
+
+func (_c *platformClientDeleteAPICall) OnUpdateAPI(namespace string, name string, lastKnownVersion string, req *platform.UpdateAPIReq) *platformClientUpdateAPICall {
+	return _c.Parent.OnUpdateAPI(namespace, name, lastKnownVersion, req)
+}
+
+func (_c *platformClientDeleteAPICall) OnUpdateGateway(name string, lastKnownVersion string, updateReq *platform.UpdateGatewayReq) *platformClientUpdateGatewayCall {
+	return _c.Parent.OnUpdateGateway(name, lastKnownVersion, updateReq)
+}
+
+func (_c *platformClientDeleteAPICall) OnUpdatePortal(name string, lastKnownVersion string, req *platform.UpdatePortalReq) *platformClientUpdatePortalCall {
+	return _c.Parent.OnUpdatePortal(name, lastKnownVersion, req)
+}
+
+func (_c *platformClientDeleteAPICall) OnCreateAPIRaw(req interface{}) *platformClientCreateAPICall {
+	return _c.Parent.OnCreateAPIRaw(req)
+}
+
+func (_c *platformClientDeleteAPICall) OnCreateGatewayRaw(createReq interface{}) *platformClientCreateGatewayCall {
+	return _c.Parent.OnCreateGatewayRaw(createReq)
+}
+
+func (_c *platformClientDeleteAPICall) OnCreatePortalRaw(req interface{}) *platformClientCreatePortalCall {
+	return _c.Parent.OnCreatePortalRaw(req)
+}
+
+func (_c *platformClientDeleteAPICall) OnDeleteAPIRaw(namespace interface{}, name interface{}, lastKnownVersion interface{}) *platformClientDeleteAPICall {
+	return _c.Parent.OnDeleteAPIRaw(namespace, name, lastKnownVersion)
+}
+
+func (_c *platformClientDeleteAPICall) OnDeleteGatewayRaw(name interface{}, lastKnownVersion interface{}) *platformClientDeleteGatewayCall {
+	return _c.Parent.OnDeleteGatewayRaw(name, lastKnownVersion)
+}
+
+func (_c *platformClientDeleteAPICall) OnDeletePortalRaw(name interface{}, lastKnownVersion interface{}) *platformClientDeletePortalCall {
+	return _c.Parent.OnDeletePortalRaw(name, lastKnownVersion)
+}
+
+func (_c *platformClientDeleteAPICall) OnUpdateAPIRaw(namespace interface{}, name interface{}, lastKnownVersion interface{}, req interface{}) *platformClientUpdateAPICall {
+	return _c.Parent.OnUpdateAPIRaw(namespace, name, lastKnownVersion, req)
+}
+
+func (_c *platformClientDeleteAPICall) OnUpdateGatewayRaw(name interface{}, lastKnownVersion interface{}, updateReq interface{}) *platformClientUpdateGatewayCall {
+	return _c.Parent.OnUpdateGatewayRaw(name, lastKnownVersion, updateReq)
+}
+
+func (_c *platformClientDeleteAPICall) OnUpdatePortalRaw(name interface{}, lastKnownVersion interface{}, req interface{}) *platformClientUpdatePortalCall {
 	return _c.Parent.OnUpdatePortalRaw(name, lastKnownVersion, req)
 }
 
@@ -375,12 +736,20 @@ func (_c *platformClientDeleteGatewayCall) TypedRun(fn func(string, string)) *pl
 	return _c
 }
 
+func (_c *platformClientDeleteGatewayCall) OnCreateAPI(req *platform.CreateAPIReq) *platformClientCreateAPICall {
+	return _c.Parent.OnCreateAPI(req)
+}
+
 func (_c *platformClientDeleteGatewayCall) OnCreateGateway(createReq *platform.CreateGatewayReq) *platformClientCreateGatewayCall {
 	return _c.Parent.OnCreateGateway(createReq)
 }
 
 func (_c *platformClientDeleteGatewayCall) OnCreatePortal(req *platform.CreatePortalReq) *platformClientCreatePortalCall {
 	return _c.Parent.OnCreatePortal(req)
+}
+
+func (_c *platformClientDeleteGatewayCall) OnDeleteAPI(namespace string, name string, lastKnownVersion string) *platformClientDeleteAPICall {
+	return _c.Parent.OnDeleteAPI(namespace, name, lastKnownVersion)
 }
 
 func (_c *platformClientDeleteGatewayCall) OnDeleteGateway(name string, lastKnownVersion string) *platformClientDeleteGatewayCall {
@@ -391,12 +760,20 @@ func (_c *platformClientDeleteGatewayCall) OnDeletePortal(name string, lastKnown
 	return _c.Parent.OnDeletePortal(name, lastKnownVersion)
 }
 
+func (_c *platformClientDeleteGatewayCall) OnUpdateAPI(namespace string, name string, lastKnownVersion string, req *platform.UpdateAPIReq) *platformClientUpdateAPICall {
+	return _c.Parent.OnUpdateAPI(namespace, name, lastKnownVersion, req)
+}
+
 func (_c *platformClientDeleteGatewayCall) OnUpdateGateway(name string, lastKnownVersion string, updateReq *platform.UpdateGatewayReq) *platformClientUpdateGatewayCall {
 	return _c.Parent.OnUpdateGateway(name, lastKnownVersion, updateReq)
 }
 
 func (_c *platformClientDeleteGatewayCall) OnUpdatePortal(name string, lastKnownVersion string, req *platform.UpdatePortalReq) *platformClientUpdatePortalCall {
 	return _c.Parent.OnUpdatePortal(name, lastKnownVersion, req)
+}
+
+func (_c *platformClientDeleteGatewayCall) OnCreateAPIRaw(req interface{}) *platformClientCreateAPICall {
+	return _c.Parent.OnCreateAPIRaw(req)
 }
 
 func (_c *platformClientDeleteGatewayCall) OnCreateGatewayRaw(createReq interface{}) *platformClientCreateGatewayCall {
@@ -407,12 +784,20 @@ func (_c *platformClientDeleteGatewayCall) OnCreatePortalRaw(req interface{}) *p
 	return _c.Parent.OnCreatePortalRaw(req)
 }
 
+func (_c *platformClientDeleteGatewayCall) OnDeleteAPIRaw(namespace interface{}, name interface{}, lastKnownVersion interface{}) *platformClientDeleteAPICall {
+	return _c.Parent.OnDeleteAPIRaw(namespace, name, lastKnownVersion)
+}
+
 func (_c *platformClientDeleteGatewayCall) OnDeleteGatewayRaw(name interface{}, lastKnownVersion interface{}) *platformClientDeleteGatewayCall {
 	return _c.Parent.OnDeleteGatewayRaw(name, lastKnownVersion)
 }
 
 func (_c *platformClientDeleteGatewayCall) OnDeletePortalRaw(name interface{}, lastKnownVersion interface{}) *platformClientDeletePortalCall {
 	return _c.Parent.OnDeletePortalRaw(name, lastKnownVersion)
+}
+
+func (_c *platformClientDeleteGatewayCall) OnUpdateAPIRaw(namespace interface{}, name interface{}, lastKnownVersion interface{}, req interface{}) *platformClientUpdateAPICall {
+	return _c.Parent.OnUpdateAPIRaw(namespace, name, lastKnownVersion, req)
 }
 
 func (_c *platformClientDeleteGatewayCall) OnUpdateGatewayRaw(name interface{}, lastKnownVersion interface{}, updateReq interface{}) *platformClientUpdateGatewayCall {
@@ -507,12 +892,20 @@ func (_c *platformClientDeletePortalCall) TypedRun(fn func(string, string)) *pla
 	return _c
 }
 
+func (_c *platformClientDeletePortalCall) OnCreateAPI(req *platform.CreateAPIReq) *platformClientCreateAPICall {
+	return _c.Parent.OnCreateAPI(req)
+}
+
 func (_c *platformClientDeletePortalCall) OnCreateGateway(createReq *platform.CreateGatewayReq) *platformClientCreateGatewayCall {
 	return _c.Parent.OnCreateGateway(createReq)
 }
 
 func (_c *platformClientDeletePortalCall) OnCreatePortal(req *platform.CreatePortalReq) *platformClientCreatePortalCall {
 	return _c.Parent.OnCreatePortal(req)
+}
+
+func (_c *platformClientDeletePortalCall) OnDeleteAPI(namespace string, name string, lastKnownVersion string) *platformClientDeleteAPICall {
+	return _c.Parent.OnDeleteAPI(namespace, name, lastKnownVersion)
 }
 
 func (_c *platformClientDeletePortalCall) OnDeleteGateway(name string, lastKnownVersion string) *platformClientDeleteGatewayCall {
@@ -523,12 +916,20 @@ func (_c *platformClientDeletePortalCall) OnDeletePortal(name string, lastKnownV
 	return _c.Parent.OnDeletePortal(name, lastKnownVersion)
 }
 
+func (_c *platformClientDeletePortalCall) OnUpdateAPI(namespace string, name string, lastKnownVersion string, req *platform.UpdateAPIReq) *platformClientUpdateAPICall {
+	return _c.Parent.OnUpdateAPI(namespace, name, lastKnownVersion, req)
+}
+
 func (_c *platformClientDeletePortalCall) OnUpdateGateway(name string, lastKnownVersion string, updateReq *platform.UpdateGatewayReq) *platformClientUpdateGatewayCall {
 	return _c.Parent.OnUpdateGateway(name, lastKnownVersion, updateReq)
 }
 
 func (_c *platformClientDeletePortalCall) OnUpdatePortal(name string, lastKnownVersion string, req *platform.UpdatePortalReq) *platformClientUpdatePortalCall {
 	return _c.Parent.OnUpdatePortal(name, lastKnownVersion, req)
+}
+
+func (_c *platformClientDeletePortalCall) OnCreateAPIRaw(req interface{}) *platformClientCreateAPICall {
+	return _c.Parent.OnCreateAPIRaw(req)
 }
 
 func (_c *platformClientDeletePortalCall) OnCreateGatewayRaw(createReq interface{}) *platformClientCreateGatewayCall {
@@ -539,6 +940,10 @@ func (_c *platformClientDeletePortalCall) OnCreatePortalRaw(req interface{}) *pl
 	return _c.Parent.OnCreatePortalRaw(req)
 }
 
+func (_c *platformClientDeletePortalCall) OnDeleteAPIRaw(namespace interface{}, name interface{}, lastKnownVersion interface{}) *platformClientDeleteAPICall {
+	return _c.Parent.OnDeleteAPIRaw(namespace, name, lastKnownVersion)
+}
+
 func (_c *platformClientDeletePortalCall) OnDeleteGatewayRaw(name interface{}, lastKnownVersion interface{}) *platformClientDeleteGatewayCall {
 	return _c.Parent.OnDeleteGatewayRaw(name, lastKnownVersion)
 }
@@ -547,11 +952,174 @@ func (_c *platformClientDeletePortalCall) OnDeletePortalRaw(name interface{}, la
 	return _c.Parent.OnDeletePortalRaw(name, lastKnownVersion)
 }
 
+func (_c *platformClientDeletePortalCall) OnUpdateAPIRaw(namespace interface{}, name interface{}, lastKnownVersion interface{}, req interface{}) *platformClientUpdateAPICall {
+	return _c.Parent.OnUpdateAPIRaw(namespace, name, lastKnownVersion, req)
+}
+
 func (_c *platformClientDeletePortalCall) OnUpdateGatewayRaw(name interface{}, lastKnownVersion interface{}, updateReq interface{}) *platformClientUpdateGatewayCall {
 	return _c.Parent.OnUpdateGatewayRaw(name, lastKnownVersion, updateReq)
 }
 
 func (_c *platformClientDeletePortalCall) OnUpdatePortalRaw(name interface{}, lastKnownVersion interface{}, req interface{}) *platformClientUpdatePortalCall {
+	return _c.Parent.OnUpdatePortalRaw(name, lastKnownVersion, req)
+}
+
+func (_m *platformClientMock) UpdateAPI(_ context.Context, namespace string, name string, lastKnownVersion string, req *platform.UpdateAPIReq) (*api.API, error) {
+	_ret := _m.Called(namespace, name, lastKnownVersion, req)
+
+	if _rf, ok := _ret.Get(0).(func(string, string, string, *platform.UpdateAPIReq) (*api.API, error)); ok {
+		return _rf(namespace, name, lastKnownVersion, req)
+	}
+
+	_ra0, _ := _ret.Get(0).(*api.API)
+	_rb1 := _ret.Error(1)
+
+	return _ra0, _rb1
+}
+
+func (_m *platformClientMock) OnUpdateAPI(namespace string, name string, lastKnownVersion string, req *platform.UpdateAPIReq) *platformClientUpdateAPICall {
+	return &platformClientUpdateAPICall{Call: _m.Mock.On("UpdateAPI", namespace, name, lastKnownVersion, req), Parent: _m}
+}
+
+func (_m *platformClientMock) OnUpdateAPIRaw(namespace interface{}, name interface{}, lastKnownVersion interface{}, req interface{}) *platformClientUpdateAPICall {
+	return &platformClientUpdateAPICall{Call: _m.Mock.On("UpdateAPI", namespace, name, lastKnownVersion, req), Parent: _m}
+}
+
+type platformClientUpdateAPICall struct {
+	*mock.Call
+	Parent *platformClientMock
+}
+
+func (_c *platformClientUpdateAPICall) Panic(msg string) *platformClientUpdateAPICall {
+	_c.Call = _c.Call.Panic(msg)
+	return _c
+}
+
+func (_c *platformClientUpdateAPICall) Once() *platformClientUpdateAPICall {
+	_c.Call = _c.Call.Once()
+	return _c
+}
+
+func (_c *platformClientUpdateAPICall) Twice() *platformClientUpdateAPICall {
+	_c.Call = _c.Call.Twice()
+	return _c
+}
+
+func (_c *platformClientUpdateAPICall) Times(i int) *platformClientUpdateAPICall {
+	_c.Call = _c.Call.Times(i)
+	return _c
+}
+
+func (_c *platformClientUpdateAPICall) WaitUntil(w <-chan time.Time) *platformClientUpdateAPICall {
+	_c.Call = _c.Call.WaitUntil(w)
+	return _c
+}
+
+func (_c *platformClientUpdateAPICall) After(d time.Duration) *platformClientUpdateAPICall {
+	_c.Call = _c.Call.After(d)
+	return _c
+}
+
+func (_c *platformClientUpdateAPICall) Run(fn func(args mock.Arguments)) *platformClientUpdateAPICall {
+	_c.Call = _c.Call.Run(fn)
+	return _c
+}
+
+func (_c *platformClientUpdateAPICall) Maybe() *platformClientUpdateAPICall {
+	_c.Call = _c.Call.Maybe()
+	return _c
+}
+
+func (_c *platformClientUpdateAPICall) TypedReturns(a *api.API, b error) *platformClientUpdateAPICall {
+	_c.Call = _c.Return(a, b)
+	return _c
+}
+
+func (_c *platformClientUpdateAPICall) ReturnsFn(fn func(string, string, string, *platform.UpdateAPIReq) (*api.API, error)) *platformClientUpdateAPICall {
+	_c.Call = _c.Return(fn)
+	return _c
+}
+
+func (_c *platformClientUpdateAPICall) TypedRun(fn func(string, string, string, *platform.UpdateAPIReq)) *platformClientUpdateAPICall {
+	_c.Call = _c.Call.Run(func(args mock.Arguments) {
+		_namespace := args.String(0)
+		_name := args.String(1)
+		_lastKnownVersion := args.String(2)
+		_req, _ := args.Get(3).(*platform.UpdateAPIReq)
+		fn(_namespace, _name, _lastKnownVersion, _req)
+	})
+	return _c
+}
+
+func (_c *platformClientUpdateAPICall) OnCreateAPI(req *platform.CreateAPIReq) *platformClientCreateAPICall {
+	return _c.Parent.OnCreateAPI(req)
+}
+
+func (_c *platformClientUpdateAPICall) OnCreateGateway(createReq *platform.CreateGatewayReq) *platformClientCreateGatewayCall {
+	return _c.Parent.OnCreateGateway(createReq)
+}
+
+func (_c *platformClientUpdateAPICall) OnCreatePortal(req *platform.CreatePortalReq) *platformClientCreatePortalCall {
+	return _c.Parent.OnCreatePortal(req)
+}
+
+func (_c *platformClientUpdateAPICall) OnDeleteAPI(namespace string, name string, lastKnownVersion string) *platformClientDeleteAPICall {
+	return _c.Parent.OnDeleteAPI(namespace, name, lastKnownVersion)
+}
+
+func (_c *platformClientUpdateAPICall) OnDeleteGateway(name string, lastKnownVersion string) *platformClientDeleteGatewayCall {
+	return _c.Parent.OnDeleteGateway(name, lastKnownVersion)
+}
+
+func (_c *platformClientUpdateAPICall) OnDeletePortal(name string, lastKnownVersion string) *platformClientDeletePortalCall {
+	return _c.Parent.OnDeletePortal(name, lastKnownVersion)
+}
+
+func (_c *platformClientUpdateAPICall) OnUpdateAPI(namespace string, name string, lastKnownVersion string, req *platform.UpdateAPIReq) *platformClientUpdateAPICall {
+	return _c.Parent.OnUpdateAPI(namespace, name, lastKnownVersion, req)
+}
+
+func (_c *platformClientUpdateAPICall) OnUpdateGateway(name string, lastKnownVersion string, updateReq *platform.UpdateGatewayReq) *platformClientUpdateGatewayCall {
+	return _c.Parent.OnUpdateGateway(name, lastKnownVersion, updateReq)
+}
+
+func (_c *platformClientUpdateAPICall) OnUpdatePortal(name string, lastKnownVersion string, req *platform.UpdatePortalReq) *platformClientUpdatePortalCall {
+	return _c.Parent.OnUpdatePortal(name, lastKnownVersion, req)
+}
+
+func (_c *platformClientUpdateAPICall) OnCreateAPIRaw(req interface{}) *platformClientCreateAPICall {
+	return _c.Parent.OnCreateAPIRaw(req)
+}
+
+func (_c *platformClientUpdateAPICall) OnCreateGatewayRaw(createReq interface{}) *platformClientCreateGatewayCall {
+	return _c.Parent.OnCreateGatewayRaw(createReq)
+}
+
+func (_c *platformClientUpdateAPICall) OnCreatePortalRaw(req interface{}) *platformClientCreatePortalCall {
+	return _c.Parent.OnCreatePortalRaw(req)
+}
+
+func (_c *platformClientUpdateAPICall) OnDeleteAPIRaw(namespace interface{}, name interface{}, lastKnownVersion interface{}) *platformClientDeleteAPICall {
+	return _c.Parent.OnDeleteAPIRaw(namespace, name, lastKnownVersion)
+}
+
+func (_c *platformClientUpdateAPICall) OnDeleteGatewayRaw(name interface{}, lastKnownVersion interface{}) *platformClientDeleteGatewayCall {
+	return _c.Parent.OnDeleteGatewayRaw(name, lastKnownVersion)
+}
+
+func (_c *platformClientUpdateAPICall) OnDeletePortalRaw(name interface{}, lastKnownVersion interface{}) *platformClientDeletePortalCall {
+	return _c.Parent.OnDeletePortalRaw(name, lastKnownVersion)
+}
+
+func (_c *platformClientUpdateAPICall) OnUpdateAPIRaw(namespace interface{}, name interface{}, lastKnownVersion interface{}, req interface{}) *platformClientUpdateAPICall {
+	return _c.Parent.OnUpdateAPIRaw(namespace, name, lastKnownVersion, req)
+}
+
+func (_c *platformClientUpdateAPICall) OnUpdateGatewayRaw(name interface{}, lastKnownVersion interface{}, updateReq interface{}) *platformClientUpdateGatewayCall {
+	return _c.Parent.OnUpdateGatewayRaw(name, lastKnownVersion, updateReq)
+}
+
+func (_c *platformClientUpdateAPICall) OnUpdatePortalRaw(name interface{}, lastKnownVersion interface{}, req interface{}) *platformClientUpdatePortalCall {
 	return _c.Parent.OnUpdatePortalRaw(name, lastKnownVersion, req)
 }
 
@@ -641,12 +1209,20 @@ func (_c *platformClientUpdateGatewayCall) TypedRun(fn func(string, string, *pla
 	return _c
 }
 
+func (_c *platformClientUpdateGatewayCall) OnCreateAPI(req *platform.CreateAPIReq) *platformClientCreateAPICall {
+	return _c.Parent.OnCreateAPI(req)
+}
+
 func (_c *platformClientUpdateGatewayCall) OnCreateGateway(createReq *platform.CreateGatewayReq) *platformClientCreateGatewayCall {
 	return _c.Parent.OnCreateGateway(createReq)
 }
 
 func (_c *platformClientUpdateGatewayCall) OnCreatePortal(req *platform.CreatePortalReq) *platformClientCreatePortalCall {
 	return _c.Parent.OnCreatePortal(req)
+}
+
+func (_c *platformClientUpdateGatewayCall) OnDeleteAPI(namespace string, name string, lastKnownVersion string) *platformClientDeleteAPICall {
+	return _c.Parent.OnDeleteAPI(namespace, name, lastKnownVersion)
 }
 
 func (_c *platformClientUpdateGatewayCall) OnDeleteGateway(name string, lastKnownVersion string) *platformClientDeleteGatewayCall {
@@ -657,12 +1233,20 @@ func (_c *platformClientUpdateGatewayCall) OnDeletePortal(name string, lastKnown
 	return _c.Parent.OnDeletePortal(name, lastKnownVersion)
 }
 
+func (_c *platformClientUpdateGatewayCall) OnUpdateAPI(namespace string, name string, lastKnownVersion string, req *platform.UpdateAPIReq) *platformClientUpdateAPICall {
+	return _c.Parent.OnUpdateAPI(namespace, name, lastKnownVersion, req)
+}
+
 func (_c *platformClientUpdateGatewayCall) OnUpdateGateway(name string, lastKnownVersion string, updateReq *platform.UpdateGatewayReq) *platformClientUpdateGatewayCall {
 	return _c.Parent.OnUpdateGateway(name, lastKnownVersion, updateReq)
 }
 
 func (_c *platformClientUpdateGatewayCall) OnUpdatePortal(name string, lastKnownVersion string, req *platform.UpdatePortalReq) *platformClientUpdatePortalCall {
 	return _c.Parent.OnUpdatePortal(name, lastKnownVersion, req)
+}
+
+func (_c *platformClientUpdateGatewayCall) OnCreateAPIRaw(req interface{}) *platformClientCreateAPICall {
+	return _c.Parent.OnCreateAPIRaw(req)
 }
 
 func (_c *platformClientUpdateGatewayCall) OnCreateGatewayRaw(createReq interface{}) *platformClientCreateGatewayCall {
@@ -673,12 +1257,20 @@ func (_c *platformClientUpdateGatewayCall) OnCreatePortalRaw(req interface{}) *p
 	return _c.Parent.OnCreatePortalRaw(req)
 }
 
+func (_c *platformClientUpdateGatewayCall) OnDeleteAPIRaw(namespace interface{}, name interface{}, lastKnownVersion interface{}) *platformClientDeleteAPICall {
+	return _c.Parent.OnDeleteAPIRaw(namespace, name, lastKnownVersion)
+}
+
 func (_c *platformClientUpdateGatewayCall) OnDeleteGatewayRaw(name interface{}, lastKnownVersion interface{}) *platformClientDeleteGatewayCall {
 	return _c.Parent.OnDeleteGatewayRaw(name, lastKnownVersion)
 }
 
 func (_c *platformClientUpdateGatewayCall) OnDeletePortalRaw(name interface{}, lastKnownVersion interface{}) *platformClientDeletePortalCall {
 	return _c.Parent.OnDeletePortalRaw(name, lastKnownVersion)
+}
+
+func (_c *platformClientUpdateGatewayCall) OnUpdateAPIRaw(namespace interface{}, name interface{}, lastKnownVersion interface{}, req interface{}) *platformClientUpdateAPICall {
+	return _c.Parent.OnUpdateAPIRaw(namespace, name, lastKnownVersion, req)
 }
 
 func (_c *platformClientUpdateGatewayCall) OnUpdateGatewayRaw(name interface{}, lastKnownVersion interface{}, updateReq interface{}) *platformClientUpdateGatewayCall {
@@ -775,12 +1367,20 @@ func (_c *platformClientUpdatePortalCall) TypedRun(fn func(string, string, *plat
 	return _c
 }
 
+func (_c *platformClientUpdatePortalCall) OnCreateAPI(req *platform.CreateAPIReq) *platformClientCreateAPICall {
+	return _c.Parent.OnCreateAPI(req)
+}
+
 func (_c *platformClientUpdatePortalCall) OnCreateGateway(createReq *platform.CreateGatewayReq) *platformClientCreateGatewayCall {
 	return _c.Parent.OnCreateGateway(createReq)
 }
 
 func (_c *platformClientUpdatePortalCall) OnCreatePortal(req *platform.CreatePortalReq) *platformClientCreatePortalCall {
 	return _c.Parent.OnCreatePortal(req)
+}
+
+func (_c *platformClientUpdatePortalCall) OnDeleteAPI(namespace string, name string, lastKnownVersion string) *platformClientDeleteAPICall {
+	return _c.Parent.OnDeleteAPI(namespace, name, lastKnownVersion)
 }
 
 func (_c *platformClientUpdatePortalCall) OnDeleteGateway(name string, lastKnownVersion string) *platformClientDeleteGatewayCall {
@@ -791,12 +1391,20 @@ func (_c *platformClientUpdatePortalCall) OnDeletePortal(name string, lastKnownV
 	return _c.Parent.OnDeletePortal(name, lastKnownVersion)
 }
 
+func (_c *platformClientUpdatePortalCall) OnUpdateAPI(namespace string, name string, lastKnownVersion string, req *platform.UpdateAPIReq) *platformClientUpdateAPICall {
+	return _c.Parent.OnUpdateAPI(namespace, name, lastKnownVersion, req)
+}
+
 func (_c *platformClientUpdatePortalCall) OnUpdateGateway(name string, lastKnownVersion string, updateReq *platform.UpdateGatewayReq) *platformClientUpdateGatewayCall {
 	return _c.Parent.OnUpdateGateway(name, lastKnownVersion, updateReq)
 }
 
 func (_c *platformClientUpdatePortalCall) OnUpdatePortal(name string, lastKnownVersion string, req *platform.UpdatePortalReq) *platformClientUpdatePortalCall {
 	return _c.Parent.OnUpdatePortal(name, lastKnownVersion, req)
+}
+
+func (_c *platformClientUpdatePortalCall) OnCreateAPIRaw(req interface{}) *platformClientCreateAPICall {
+	return _c.Parent.OnCreateAPIRaw(req)
 }
 
 func (_c *platformClientUpdatePortalCall) OnCreateGatewayRaw(createReq interface{}) *platformClientCreateGatewayCall {
@@ -807,12 +1415,20 @@ func (_c *platformClientUpdatePortalCall) OnCreatePortalRaw(req interface{}) *pl
 	return _c.Parent.OnCreatePortalRaw(req)
 }
 
+func (_c *platformClientUpdatePortalCall) OnDeleteAPIRaw(namespace interface{}, name interface{}, lastKnownVersion interface{}) *platformClientDeleteAPICall {
+	return _c.Parent.OnDeleteAPIRaw(namespace, name, lastKnownVersion)
+}
+
 func (_c *platformClientUpdatePortalCall) OnDeleteGatewayRaw(name interface{}, lastKnownVersion interface{}) *platformClientDeleteGatewayCall {
 	return _c.Parent.OnDeleteGatewayRaw(name, lastKnownVersion)
 }
 
 func (_c *platformClientUpdatePortalCall) OnDeletePortalRaw(name interface{}, lastKnownVersion interface{}) *platformClientDeletePortalCall {
 	return _c.Parent.OnDeletePortalRaw(name, lastKnownVersion)
+}
+
+func (_c *platformClientUpdatePortalCall) OnUpdateAPIRaw(namespace interface{}, name interface{}, lastKnownVersion interface{}, req interface{}) *platformClientUpdateAPICall {
+	return _c.Parent.OnUpdateAPIRaw(namespace, name, lastKnownVersion, req)
 }
 
 func (_c *platformClientUpdatePortalCall) OnUpdateGatewayRaw(name interface{}, lastKnownVersion interface{}, updateReq interface{}) *platformClientUpdateGatewayCall {

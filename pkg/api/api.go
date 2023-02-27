@@ -18,9 +18,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 package api
 
 import (
-	"crypto/sha1" //nolint:gosec // Used for content diffing, no impact on security
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -62,9 +60,9 @@ func (a *API) Resource() (*hubv1alpha1.API, error) {
 		},
 	}
 
-	apiHash, err := hashAPI(api)
+	apiHash, err := HashAPI(api)
 	if err != nil {
-		return nil, fmt.Errorf("compute api hash: %w", err)
+		return nil, fmt.Errorf("compute API hash: %w", err)
 	}
 
 	api.Status.Hash = apiHash
@@ -77,19 +75,17 @@ type apiHash struct {
 	Service    hubv1alpha1.APIService `json:"service"`
 }
 
-func hashAPI(a *hubv1alpha1.API) (string, error) {
+// HashAPI generates the hash of the API.
+func HashAPI(a *hubv1alpha1.API) (string, error) {
 	ah := apiHash{
 		PathPrefix: a.Spec.PathPrefix,
 		Service:    a.Spec.Service,
 	}
 
-	b, err := json.Marshal(ah)
+	hash, err := sum(ah)
 	if err != nil {
-		return "", fmt.Errorf("encode api: %w", err)
+		return "", fmt.Errorf("sum object: %w", err)
 	}
 
-	hash := sha1.New() //nolint:gosec // Used for content diffing, no impact on security
-	hash.Write(b)
-
-	return base64.StdEncoding.EncodeToString(hash.Sum(nil)), nil
+	return base64.StdEncoding.EncodeToString(hash), nil
 }

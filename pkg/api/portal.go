@@ -18,10 +18,11 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 package api
 
 import (
-	"crypto/sha1" //nolint:gosec // Used for content diffing, no impact on security
+	"bytes"
 	"encoding/base64"
-	"encoding/json"
+	"encoding/gob"
 	"fmt"
+	"hash/fnv"
 	"strings"
 	"time"
 
@@ -110,13 +111,25 @@ func HashPortal(p *hubv1alpha1.APIPortal) (string, error) {
 		CustomDomains: p.Spec.CustomDomains,
 	}
 
-	b, err := json.Marshal(ph)
+	hash, err := sum(ph)
 	if err != nil {
-		return "", fmt.Errorf("encode APIPortal: %w", err)
+		return "", fmt.Errorf("sum object: %w", err)
 	}
 
-	hash := sha1.New() //nolint:gosec // Used for content diffing, no impact on security
-	hash.Write(b)
+	return base64.StdEncoding.EncodeToString(hash), nil
+}
 
-	return base64.StdEncoding.EncodeToString(hash.Sum(nil)), nil
+// sum returns the version of the provided data.
+func sum(a any) ([]byte, error) {
+	var buff bytes.Buffer
+	encoder := gob.NewEncoder(&buff)
+
+	if err := encoder.Encode(a); err != nil {
+		return nil, fmt.Errorf("encode data: %w", err)
+	}
+
+	hash := fnv.New128a()
+	hash.Write(buff.Bytes())
+
+	return hash.Sum(nil), nil
 }
