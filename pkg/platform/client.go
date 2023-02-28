@@ -873,7 +873,7 @@ func (c *Client) createResource(ctx context.Context, apiPath string, body []byte
 	switch resp.StatusCode {
 	case http.StatusCreated:
 		if err = json.NewDecoder(resp.Body).Decode(&obj); err != nil {
-			return fmt.Errorf("failed to decode portal: %w", err)
+			return fmt.Errorf("failed to decode resource from %q: %w", baseURL.String(), err)
 		}
 		return nil
 	default:
@@ -986,7 +986,7 @@ func (c *Client) updateResource(ctx context.Context, apiPath, name, lastKnownVer
 	switch resp.StatusCode {
 	case http.StatusOK:
 		if err = json.NewDecoder(resp.Body).Decode(&obj); err != nil {
-			return fmt.Errorf("failed to decode portal: %w", err)
+			return fmt.Errorf("failed to decode resource from %q: %w", baseURL.String(), err)
 		}
 
 		return nil
