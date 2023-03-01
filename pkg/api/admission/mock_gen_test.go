@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/traefik/hub-agent-kubernetes/pkg/api"
 	"github.com/traefik/hub-agent-kubernetes/pkg/platform"
+	"k8s.io/api/admission/v1"
 )
 
 // platformClientMock mock of PlatformClient.
@@ -1437,4 +1438,218 @@ func (_c *platformClientUpdatePortalCall) OnUpdateGatewayRaw(name interface{}, l
 
 func (_c *platformClientUpdatePortalCall) OnUpdatePortalRaw(name interface{}, lastKnownVersion interface{}, req interface{}) *platformClientUpdatePortalCall {
 	return _c.Parent.OnUpdatePortalRaw(name, lastKnownVersion, req)
+}
+
+// reviewerMock mock of Reviewer.
+type reviewerMock struct{ mock.Mock }
+
+// newReviewerMock creates a new reviewerMock.
+func newReviewerMock(tb testing.TB) *reviewerMock {
+	tb.Helper()
+
+	m := &reviewerMock{}
+	m.Mock.Test(tb)
+
+	tb.Cleanup(func() { m.AssertExpectations(tb) })
+
+	return m
+}
+
+func (_m *reviewerMock) CanReview(req *v1.AdmissionRequest) bool {
+	_ret := _m.Called(req)
+
+	if _rf, ok := _ret.Get(0).(func(*v1.AdmissionRequest) bool); ok {
+		return _rf(req)
+	}
+
+	_ra0 := _ret.Bool(0)
+
+	return _ra0
+}
+
+func (_m *reviewerMock) OnCanReview(req *v1.AdmissionRequest) *reviewerCanReviewCall {
+	return &reviewerCanReviewCall{Call: _m.Mock.On("CanReview", req), Parent: _m}
+}
+
+func (_m *reviewerMock) OnCanReviewRaw(req interface{}) *reviewerCanReviewCall {
+	return &reviewerCanReviewCall{Call: _m.Mock.On("CanReview", req), Parent: _m}
+}
+
+type reviewerCanReviewCall struct {
+	*mock.Call
+	Parent *reviewerMock
+}
+
+func (_c *reviewerCanReviewCall) Panic(msg string) *reviewerCanReviewCall {
+	_c.Call = _c.Call.Panic(msg)
+	return _c
+}
+
+func (_c *reviewerCanReviewCall) Once() *reviewerCanReviewCall {
+	_c.Call = _c.Call.Once()
+	return _c
+}
+
+func (_c *reviewerCanReviewCall) Twice() *reviewerCanReviewCall {
+	_c.Call = _c.Call.Twice()
+	return _c
+}
+
+func (_c *reviewerCanReviewCall) Times(i int) *reviewerCanReviewCall {
+	_c.Call = _c.Call.Times(i)
+	return _c
+}
+
+func (_c *reviewerCanReviewCall) WaitUntil(w <-chan time.Time) *reviewerCanReviewCall {
+	_c.Call = _c.Call.WaitUntil(w)
+	return _c
+}
+
+func (_c *reviewerCanReviewCall) After(d time.Duration) *reviewerCanReviewCall {
+	_c.Call = _c.Call.After(d)
+	return _c
+}
+
+func (_c *reviewerCanReviewCall) Run(fn func(args mock.Arguments)) *reviewerCanReviewCall {
+	_c.Call = _c.Call.Run(fn)
+	return _c
+}
+
+func (_c *reviewerCanReviewCall) Maybe() *reviewerCanReviewCall {
+	_c.Call = _c.Call.Maybe()
+	return _c
+}
+
+func (_c *reviewerCanReviewCall) TypedReturns(a bool) *reviewerCanReviewCall {
+	_c.Call = _c.Return(a)
+	return _c
+}
+
+func (_c *reviewerCanReviewCall) ReturnsFn(fn func(*v1.AdmissionRequest) bool) *reviewerCanReviewCall {
+	_c.Call = _c.Return(fn)
+	return _c
+}
+
+func (_c *reviewerCanReviewCall) TypedRun(fn func(*v1.AdmissionRequest)) *reviewerCanReviewCall {
+	_c.Call = _c.Call.Run(func(args mock.Arguments) {
+		_req, _ := args.Get(0).(*v1.AdmissionRequest)
+		fn(_req)
+	})
+	return _c
+}
+
+func (_c *reviewerCanReviewCall) OnCanReview(req *v1.AdmissionRequest) *reviewerCanReviewCall {
+	return _c.Parent.OnCanReview(req)
+}
+
+func (_c *reviewerCanReviewCall) OnReview(req *v1.AdmissionRequest) *reviewerReviewCall {
+	return _c.Parent.OnReview(req)
+}
+
+func (_c *reviewerCanReviewCall) OnCanReviewRaw(req interface{}) *reviewerCanReviewCall {
+	return _c.Parent.OnCanReviewRaw(req)
+}
+
+func (_c *reviewerCanReviewCall) OnReviewRaw(req interface{}) *reviewerReviewCall {
+	return _c.Parent.OnReviewRaw(req)
+}
+
+func (_m *reviewerMock) Review(_ context.Context, req *v1.AdmissionRequest) ([]byte, error) {
+	_ret := _m.Called(req)
+
+	if _rf, ok := _ret.Get(0).(func(*v1.AdmissionRequest) ([]byte, error)); ok {
+		return _rf(req)
+	}
+
+	_ra0, _ := _ret.Get(0).([]byte)
+	_rb1 := _ret.Error(1)
+
+	return _ra0, _rb1
+}
+
+func (_m *reviewerMock) OnReview(req *v1.AdmissionRequest) *reviewerReviewCall {
+	return &reviewerReviewCall{Call: _m.Mock.On("Review", req), Parent: _m}
+}
+
+func (_m *reviewerMock) OnReviewRaw(req interface{}) *reviewerReviewCall {
+	return &reviewerReviewCall{Call: _m.Mock.On("Review", req), Parent: _m}
+}
+
+type reviewerReviewCall struct {
+	*mock.Call
+	Parent *reviewerMock
+}
+
+func (_c *reviewerReviewCall) Panic(msg string) *reviewerReviewCall {
+	_c.Call = _c.Call.Panic(msg)
+	return _c
+}
+
+func (_c *reviewerReviewCall) Once() *reviewerReviewCall {
+	_c.Call = _c.Call.Once()
+	return _c
+}
+
+func (_c *reviewerReviewCall) Twice() *reviewerReviewCall {
+	_c.Call = _c.Call.Twice()
+	return _c
+}
+
+func (_c *reviewerReviewCall) Times(i int) *reviewerReviewCall {
+	_c.Call = _c.Call.Times(i)
+	return _c
+}
+
+func (_c *reviewerReviewCall) WaitUntil(w <-chan time.Time) *reviewerReviewCall {
+	_c.Call = _c.Call.WaitUntil(w)
+	return _c
+}
+
+func (_c *reviewerReviewCall) After(d time.Duration) *reviewerReviewCall {
+	_c.Call = _c.Call.After(d)
+	return _c
+}
+
+func (_c *reviewerReviewCall) Run(fn func(args mock.Arguments)) *reviewerReviewCall {
+	_c.Call = _c.Call.Run(fn)
+	return _c
+}
+
+func (_c *reviewerReviewCall) Maybe() *reviewerReviewCall {
+	_c.Call = _c.Call.Maybe()
+	return _c
+}
+
+func (_c *reviewerReviewCall) TypedReturns(a []byte, b error) *reviewerReviewCall {
+	_c.Call = _c.Return(a, b)
+	return _c
+}
+
+func (_c *reviewerReviewCall) ReturnsFn(fn func(*v1.AdmissionRequest) ([]byte, error)) *reviewerReviewCall {
+	_c.Call = _c.Return(fn)
+	return _c
+}
+
+func (_c *reviewerReviewCall) TypedRun(fn func(*v1.AdmissionRequest)) *reviewerReviewCall {
+	_c.Call = _c.Call.Run(func(args mock.Arguments) {
+		_req, _ := args.Get(0).(*v1.AdmissionRequest)
+		fn(_req)
+	})
+	return _c
+}
+
+func (_c *reviewerReviewCall) OnCanReview(req *v1.AdmissionRequest) *reviewerCanReviewCall {
+	return _c.Parent.OnCanReview(req)
+}
+
+func (_c *reviewerReviewCall) OnReview(req *v1.AdmissionRequest) *reviewerReviewCall {
+	return _c.Parent.OnReview(req)
+}
+
+func (_c *reviewerReviewCall) OnCanReviewRaw(req interface{}) *reviewerCanReviewCall {
+	return _c.Parent.OnCanReviewRaw(req)
+}
+
+func (_c *reviewerReviewCall) OnReviewRaw(req interface{}) *reviewerReviewCall {
+	return _c.Parent.OnReviewRaw(req)
 }

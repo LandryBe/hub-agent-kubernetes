@@ -18,9 +18,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 package api
 
 import (
-	"crypto/sha1" //nolint:gosec // Used for content diffing, no impact on security
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"sort"
 	"strings"
@@ -109,23 +107,20 @@ type gatewayHash struct {
 }
 
 // HashGateway generates the hash of the APIGateway.
-func HashGateway(p *hubv1alpha1.APIGateway) (string, error) {
+func HashGateway(g *hubv1alpha1.APIGateway) (string, error) {
 	gh := gatewayHash{
-		Labels:        newSortedMap(p.Labels),
-		Accesses:      p.Spec.APIAccesses,
-		HubDomain:     p.Status.HubDomain,
-		CustomDomains: p.Spec.CustomDomains,
+		Labels:        newSortedMap(g.Labels),
+		Accesses:      g.Spec.APIAccesses,
+		HubDomain:     g.Status.HubDomain,
+		CustomDomains: g.Spec.CustomDomains,
 	}
 
-	b, err := json.Marshal(gh)
+	hash, err := sum(gh)
 	if err != nil {
-		return "", fmt.Errorf("encode APIGateway: %w", err)
+		return "", fmt.Errorf("sum object: %w", err)
 	}
 
-	hash := sha1.New() //nolint:gosec // Used for content diffing, no impact on security
-	hash.Write(b)
-
-	return base64.StdEncoding.EncodeToString(hash.Sum(nil)), nil
+	return base64.StdEncoding.EncodeToString(hash), nil
 }
 
 // sortedMap is a map sorted by key. This map can safely be used for computing a hash.
