@@ -18,11 +18,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 package api
 
 import (
-	"bytes"
 	"encoding/base64"
-	"encoding/gob"
 	"fmt"
-	"hash/fnv"
 	"strings"
 	"time"
 
@@ -117,19 +114,4 @@ func HashPortal(p *hubv1alpha1.APIPortal) (string, error) {
 	}
 
 	return base64.StdEncoding.EncodeToString(hash), nil
-}
-
-// sum returns the version of the provided data.
-func sum(a any) ([]byte, error) {
-	var buff bytes.Buffer
-	encoder := gob.NewEncoder(&buff)
-
-	if err := encoder.Encode(a); err != nil {
-		return nil, fmt.Errorf("encode data: %w", err)
-	}
-
-	hash := fnv.New128a()
-	hash.Write(buff.Bytes())
-
-	return hash.Sum(nil), nil
 }

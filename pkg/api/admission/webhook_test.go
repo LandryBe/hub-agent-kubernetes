@@ -74,7 +74,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			wantCodeStatus: http.StatusOK,
 		},
 		{
-			desc: "return a not allowed response if no reviewer is broken",
+			desc: "return a not allowed response if reviewer is broken",
 			request: &admv1.AdmissionRequest{
 				UID: "id",
 				Kind: metav1.GroupVersionKind{

@@ -20,12 +20,10 @@ package api
 import (
 	"encoding/base64"
 	"fmt"
-	"sort"
 	"strings"
 	"time"
 
 	hubv1alpha1 "github.com/traefik/hub-agent-kubernetes/pkg/crd/api/hub/v1alpha1"
-	"golang.org/x/exp/constraints"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -121,26 +119,4 @@ func HashGateway(g *hubv1alpha1.APIGateway) (string, error) {
 	}
 
 	return base64.StdEncoding.EncodeToString(hash), nil
-}
-
-// sortedMap is a map sorted by key. This map can safely be used for computing a hash.
-type sortedMap[T constraints.Ordered] []keyValue[T]
-
-type keyValue[T constraints.Ordered] struct {
-	Key   T
-	Value any
-}
-
-// newSortedMap creates a new sorted version of the given map.
-func newSortedMap[T constraints.Ordered](source map[T]string) sortedMap[T] {
-	var keyValues sortedMap[T]
-	for key, value := range source {
-		keyValues = append(keyValues, keyValue[T]{Key: key, Value: value})
-	}
-
-	sort.Slice(keyValues, func(i, j int) bool {
-		return keyValues[i].Key < keyValues[j].Key
-	})
-
-	return keyValues
 }
