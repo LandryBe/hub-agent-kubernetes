@@ -101,7 +101,7 @@ func Test_WatcherAPIRun(t *testing.T) {
 
 	<-ctx.Done()
 
-	policy, err := clientSetHub.HubV1alpha1().APIs("").Get(ctx, "toCreate", metav1.GetOptions{})
+	api, err := clientSetHub.HubV1alpha1().APIs("").Get(ctx, "toCreate", metav1.GetOptions{})
 	require.NoError(t, err)
 	assert.Equal(t, "prefix", policy.Spec.PathPrefix)
 	assert.Equal(t, hubv1alpha1.APIService{
@@ -111,7 +111,7 @@ func Test_WatcherAPIRun(t *testing.T) {
 		},
 	}, policy.Spec.Service)
 
-	policy, err = clientSetHub.HubV1alpha1().APIs("").Get(ctx, "toUpdate", metav1.GetOptions{})
+	api, err = clientSetHub.HubV1alpha1().APIs("").Get(ctx, "toUpdate", metav1.GetOptions{})
 	require.NoError(t, err)
 	assert.Equal(t, "prefixUpdate", policy.Spec.PathPrefix)
 	assert.Equal(t, hubv1alpha1.APIService{
@@ -121,6 +121,6 @@ func Test_WatcherAPIRun(t *testing.T) {
 		},
 	}, policy.Spec.Service)
 
-	_, err = clientSetHub.HubV1alpha1().AccessControlPolicies().Get(ctx, "toDelete", metav1.GetOptions{})
+	_, err = clientSetHub.HubV1alpha1().APIs().Get(ctx, "toDelete", metav1.GetOptions{})
 	require.Error(t, err)
 }

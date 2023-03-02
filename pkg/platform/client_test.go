@@ -2302,7 +2302,7 @@ func TestClient_GetAPIs(t *testing.T) {
 	require.NoError(t, err)
 	c.httpClient = srv.Client()
 
-	gotACPs, err := c.GetAPIs(context.Background())
+	gotAPIs, err := c.GetAPIs(context.Background())
 	require.NoError(t, err)
 
 	assert.Equal(t, wantAPIs, gotACPs)
@@ -2498,7 +2498,7 @@ func TestClient_UpdateAPI(t *testing.T) {
 			require.NoError(t, err)
 			c.httpClient = srv.Client()
 
-			updatedACP, err := c.UpdateAPI(context.Background(), "ns", "name", "oldVersionAPI", test.req)
+			updatedAPI, err := c.UpdateAPI(context.Background(), "ns", "name", "oldVersionAPI", test.req)
 			test.wantErr(t, err)
 
 			assert.Equal(t, *test.req, gotReq)

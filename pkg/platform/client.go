@@ -917,7 +917,7 @@ func (c *Client) GetAPIs(ctx context.Context) ([]api.API, error) {
 	return apis, nil
 }
 
-// UpdateAPI updates a portal.
+// UpdateAPI updates an API.
 func (c *Client) UpdateAPI(ctx context.Context, namespace, name, lastKnownVersion string, updateReq *UpdateAPIReq) (*api.API, error) {
 	body, err := json.Marshal(updateReq)
 	if err != nil {
