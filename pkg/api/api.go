@@ -30,6 +30,7 @@ import (
 type API struct {
 	Name       string                 `json:"name"`
 	Namespace  string                 `json:"namespace"`
+	Labels     map[string]string      `json:"labels,omitempty"`
 	PathPrefix string                 `json:"pathPrefix"`
 	Service    hubv1alpha1.APIService `json:"service"`
 
@@ -49,6 +50,7 @@ func (a *API) Resource() (*hubv1alpha1.API, error) {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      a.Name,
 			Namespace: a.Namespace,
+			Labels:    a.Labels,
 		},
 		Spec: hubv1alpha1.APISpec{
 			PathPrefix: a.PathPrefix,
@@ -73,6 +75,7 @@ func (a *API) Resource() (*hubv1alpha1.API, error) {
 type apiHash struct {
 	PathPrefix string                 `json:"pathPrefix,omitempty"`
 	Service    hubv1alpha1.APIService `json:"service"`
+	Labels     sortedMap[string]      `json:"labels,omitempty"`
 }
 
 // HashAPI generates the hash of the API.
@@ -80,6 +83,7 @@ func HashAPI(a *hubv1alpha1.API) (string, error) {
 	ah := apiHash{
 		PathPrefix: a.Spec.PathPrefix,
 		Service:    a.Spec.Service,
+		Labels:     newSortedMap(a.Labels),
 	}
 
 	hash, err := sum(ah)

@@ -86,7 +86,7 @@ func TestAPI_Review_createOperation(t *testing.T) {
 				{Op: "replace", Path: "/status", Value: hubv1alpha1.APIStatus{
 					Version:  "version-1",
 					SyncedAt: now,
-					Hash:     "UjuojgUOIKhGL1FUFVsBOg==",
+					Hash:     "rqayJiQLMKn9w/5AHZJASw==",
 				}},
 			}),
 		},
@@ -223,7 +223,7 @@ func TestAPI_Review_updateOperation(t *testing.T) {
 				{Op: "replace", Path: "/status", Value: hubv1alpha1.APIStatus{
 					Version:  "version-2",
 					SyncedAt: now,
-					Hash:     "BCNGJCaTyhlwiS8HmN8iAg==",
+					Hash:     "/Nq+LA9SdjIAxSRj162bCw==",
 				}},
 			}),
 		},

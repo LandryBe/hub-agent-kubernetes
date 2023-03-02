@@ -103,24 +103,24 @@ func Test_WatcherAPIRun(t *testing.T) {
 
 	api, err := clientSetHub.HubV1alpha1().APIs("").Get(ctx, "toCreate", metav1.GetOptions{})
 	require.NoError(t, err)
-	assert.Equal(t, "prefix", policy.Spec.PathPrefix)
+	assert.Equal(t, "prefix", api.Spec.PathPrefix)
 	assert.Equal(t, hubv1alpha1.APIService{
 		Name: "service",
 		Port: hubv1alpha1.APIServiceBackendPort{
 			Number: 80,
 		},
-	}, policy.Spec.Service)
+	}, api.Spec.Service)
 
 	api, err = clientSetHub.HubV1alpha1().APIs("").Get(ctx, "toUpdate", metav1.GetOptions{})
 	require.NoError(t, err)
-	assert.Equal(t, "prefixUpdate", policy.Spec.PathPrefix)
+	assert.Equal(t, "prefixUpdate", api.Spec.PathPrefix)
 	assert.Equal(t, hubv1alpha1.APIService{
 		Name: "serviceUpdate",
 		Port: hubv1alpha1.APIServiceBackendPort{
 			Number: 80,
 		},
-	}, policy.Spec.Service)
+	}, api.Spec.Service)
 
-	_, err = clientSetHub.HubV1alpha1().APIs().Get(ctx, "toDelete", metav1.GetOptions{})
+	_, err = clientSetHub.HubV1alpha1().APIs("").Get(ctx, "toDelete", metav1.GetOptions{})
 	require.Error(t, err)
 }

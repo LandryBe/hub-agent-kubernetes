@@ -2305,7 +2305,7 @@ func TestClient_GetAPIs(t *testing.T) {
 	gotAPIs, err := c.GetAPIs(context.Background())
 	require.NoError(t, err)
 
-	assert.Equal(t, wantAPIs, gotACPs)
+	assert.Equal(t, wantAPIs, gotAPIs)
 }
 
 func TestClient_CreateAPI(t *testing.T) {
@@ -2331,8 +2331,11 @@ func TestClient_CreateAPI(t *testing.T) {
 			returnStatusCode: http.StatusCreated,
 			wantErr:          assert.NoError,
 			api: &api.API{
-				Name:       "name",
-				Namespace:  "ns",
+				Name:      "name",
+				Namespace: "ns",
+				Labels: map[string]string{
+					"a": "b",
+				},
 				PathPrefix: "prefix",
 				Service: hubv1alpha1.APIService{
 					Name: "svc",
@@ -2429,8 +2432,11 @@ func TestClient_UpdateAPI(t *testing.T) {
 			returnStatusCode: http.StatusOK,
 			wantErr:          assert.NoError,
 			api: &api.API{
-				Name:       "name",
-				Namespace:  "ns",
+				Name:      "name",
+				Namespace: "ns",
+				Labels: map[string]string{
+					"a": "b",
+				},
 				PathPrefix: "prefix",
 				Service: hubv1alpha1.APIService{
 					Name: "svc",
@@ -2502,7 +2508,7 @@ func TestClient_UpdateAPI(t *testing.T) {
 			test.wantErr(t, err)
 
 			assert.Equal(t, *test.req, gotReq)
-			assert.Equal(t, test.api, updatedACP)
+			assert.Equal(t, test.api, updatedAPI)
 		})
 	}
 }
