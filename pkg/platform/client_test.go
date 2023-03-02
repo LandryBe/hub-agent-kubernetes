@@ -2269,9 +2269,9 @@ func TestClient_GetAPIs(t *testing.T) {
 			Name:       "name",
 			Namespace:  "ns",
 			PathPrefix: "prefix",
-			Service: hubv1alpha1.APIService{
+			Service: api.Service{
 				Name: "service",
-				Port: hubv1alpha1.APIServiceBackendPort{Number: 80},
+				Port: 80,
 			},
 			Version: "version-1",
 		},
@@ -2337,11 +2337,9 @@ func TestClient_CreateAPI(t *testing.T) {
 					"a": "b",
 				},
 				PathPrefix: "prefix",
-				Service: hubv1alpha1.APIService{
+				Service: api.Service{
 					Name: "svc",
-					Port: hubv1alpha1.APIServiceBackendPort{
-						Number: 80,
-					},
+					Port: 80,
 				},
 				Version: "version-1",
 			},
@@ -2438,9 +2436,9 @@ func TestClient_UpdateAPI(t *testing.T) {
 					"a": "b",
 				},
 				PathPrefix: "prefix",
-				Service: hubv1alpha1.APIService{
+				Service: api.Service{
 					Name: "svc",
-					Port: hubv1alpha1.APIServiceBackendPort{Number: 80},
+					Port: 80,
 				},
 				Version: "version-1",
 			},

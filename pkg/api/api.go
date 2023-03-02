@@ -19,6 +19,7 @@ package api
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -28,16 +29,35 @@ import (
 
 // API is an API exposed within a portal.
 type API struct {
-	Name       string                 `json:"name"`
-	Namespace  string                 `json:"namespace"`
-	Labels     map[string]string      `json:"labels,omitempty"`
-	PathPrefix string                 `json:"pathPrefix"`
-	Service    hubv1alpha1.APIService `json:"service"`
+	Name       string            `json:"name"`
+	Namespace  string            `json:"namespace"`
+	Labels     map[string]string `json:"labels,omitempty"`
+	PathPrefix string            `json:"pathPrefix"`
+	Service    Service           `json:"service"`
 
 	Version string `json:"version"`
 
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+// Service is a Kubernetes Service.
+type Service struct {
+	Name string `json:"name" bson:"name"`
+	Port int    `json:"port" bson:"port"`
+
+	OpenAPISpec OpenAPISpec `json:"openApiSpec,omitempty" bson:"openApiSpec,omitempty"`
+}
+
+// OpenAPISpec is an OpenAPISpec. It can either be fetched from a URL, or Path/Port from the service
+// or directly in the Schema field.
+type OpenAPISpec struct {
+	URL string `json:"url,omitempty" bson:"url,omitempty"`
+
+	Path string `json:"path,omitempty" bson:"path,omitempty"`
+	Port int    `json:"port,omitempty" bson:"port,omitempty"`
+
+	Schema json.RawMessage `json:"schema,omitempty" bson:"schema,omitempty"`
 }
 
 // Resource builds the v1alpha1 API resource.
@@ -54,7 +74,20 @@ func (a *API) Resource() (*hubv1alpha1.API, error) {
 		},
 		Spec: hubv1alpha1.APISpec{
 			PathPrefix: a.PathPrefix,
-			Service:    a.Service,
+			Service: hubv1alpha1.APIService{
+				Name: a.Service.Name,
+				Port: hubv1alpha1.APIServiceBackendPort{
+					Number: int32(a.Service.Port),
+				},
+				OpenAPISpec: hubv1alpha1.OpenAPISpec{
+					URL:  a.Service.OpenAPISpec.URL,
+					Path: a.Service.OpenAPISpec.Path,
+					Port: hubv1alpha1.APIServiceBackendPort{
+						Number: int32(a.Service.OpenAPISpec.Port),
+					},
+					// TODO handle Schema
+				},
+			},
 		},
 		Status: hubv1alpha1.APIStatus{
 			Version:  a.Version,

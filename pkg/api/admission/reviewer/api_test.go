@@ -133,9 +133,9 @@ func TestAPI_Review_createOperation(t *testing.T) {
 				Name:       "api-name",
 				Namespace:  "",
 				PathPrefix: "prefix",
-				Service: hubv1alpha1.APIService{
+				Service: api.Service{
 					Name: "svc",
-					Port: hubv1alpha1.APIServiceBackendPort{Number: 80},
+					Port: 80,
 				},
 				Version:   "version-1",
 				CreatedAt: time.Now().Add(-time.Hour).UTC().Truncate(time.Millisecond),
@@ -249,9 +249,9 @@ func TestAPI_Review_updateOperation(t *testing.T) {
 				Name:       "api-name",
 				Namespace:  "ns",
 				PathPrefix: "newPrefix",
-				Service: hubv1alpha1.APIService{
+				Service: api.Service{
 					Name: "newSvc",
-					Port: hubv1alpha1.APIServiceBackendPort{Number: 81},
+					Port: 81,
 				},
 				Version:   "version-2",
 				CreatedAt: time.Now().Add(-time.Hour).UTC().Truncate(time.Millisecond),

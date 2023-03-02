@@ -69,22 +69,18 @@ func Test_WatcherAPIRun(t *testing.T) {
 			{
 				Name:       "toCreate",
 				PathPrefix: "prefix",
-				Service: hubv1alpha1.APIService{
+				Service: Service{
 					Name: "service",
-					Port: hubv1alpha1.APIServiceBackendPort{
-						Number: 80,
-					},
+					Port: 80,
 				},
 				Version: "1",
 			},
 			{
 				Name:       "toUpdate",
 				PathPrefix: "prefixUpdate",
-				Service: hubv1alpha1.APIService{
+				Service: Service{
 					Name: "serviceUpdate",
-					Port: hubv1alpha1.APIServiceBackendPort{
-						Number: 80,
-					},
+					Port: 80,
 				},
 				Version: "2",
 			},
