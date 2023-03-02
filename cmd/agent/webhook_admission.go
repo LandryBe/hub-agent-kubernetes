@@ -38,6 +38,7 @@ import (
 	"github.com/traefik/hub-agent-kubernetes/pkg/acp/admission/reviewer"
 	"github.com/traefik/hub-agent-kubernetes/pkg/api"
 	apiadmission "github.com/traefik/hub-agent-kubernetes/pkg/api/admission"
+	apireviewer "github.com/traefik/hub-agent-kubernetes/pkg/api/admission/reviewer"
 	hubv1alpha1 "github.com/traefik/hub-agent-kubernetes/pkg/crd/api/hub/v1alpha1"
 	traefikv1alpha1 "github.com/traefik/hub-agent-kubernetes/pkg/crd/api/traefik/v1alpha1"
 	hubclientset "github.com/traefik/hub-agent-kubernetes/pkg/crd/generated/client/hub/clientset/versioned"
@@ -316,7 +317,12 @@ func setupAdmissionHandlers(ctx context.Context, platformClient *platform.Client
 	}
 
 	if apiAvailable {
-		apiHandler = apiadmission.NewHandler(platformClient)
+		rev := []apiadmission.Reviewer{
+			apireviewer.NewAPI(platformClient),
+			apireviewer.NewPortal(platformClient),
+			apireviewer.NewGateway(platformClient),
+		}
+		apiHandler = apiadmission.NewHandler(rev)
 	}
 
 	return admission.NewHandler(reviewers, traefikReviewer), edgeadmission.NewHandler(platformClient), apiHandler, nil

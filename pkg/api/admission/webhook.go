@@ -24,25 +24,9 @@ import (
 	"net/http"
 
 	"github.com/rs/zerolog/log"
-	"github.com/traefik/hub-agent-kubernetes/pkg/api"
-	admission "github.com/traefik/hub-agent-kubernetes/pkg/api/admission/reviewer"
-	"github.com/traefik/hub-agent-kubernetes/pkg/platform"
 	admv1 "k8s.io/api/admission/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
-
-// PlatformClient for the API service.
-type PlatformClient interface {
-	CreatePortal(ctx context.Context, req *platform.CreatePortalReq) (*api.Portal, error)
-	UpdatePortal(ctx context.Context, name, lastKnownVersion string, req *platform.UpdatePortalReq) (*api.Portal, error)
-	DeletePortal(ctx context.Context, name, lastKnownVersion string) error
-	CreateGateway(ctx context.Context, createReq *platform.CreateGatewayReq) (*api.Gateway, error)
-	UpdateGateway(ctx context.Context, name, lastKnownVersion string, updateReq *platform.UpdateGatewayReq) (*api.Gateway, error)
-	DeleteGateway(ctx context.Context, name, lastKnownVersion string) error
-	CreateAPI(ctx context.Context, req *platform.CreateAPIReq) (*api.API, error)
-	UpdateAPI(ctx context.Context, namespace, name, lastKnownVersion string, req *platform.UpdateAPIReq) (*api.API, error)
-	DeleteAPI(ctx context.Context, namespace, name, lastKnownVersion string) error
-}
 
 // Reviewer allows to review an admission review request.
 type Reviewer interface {
@@ -56,13 +40,9 @@ type Handler struct {
 }
 
 // NewHandler returns a new Handler that reviews incoming requests using the given reviewers.
-func NewHandler(client PlatformClient) *Handler {
+func NewHandler(rev []Reviewer) *Handler {
 	return &Handler{
-		reviewers: []Reviewer{
-			admission.NewAPI(client),
-			admission.NewPortal(client),
-			admission.NewGateway(client),
-		},
+		reviewers: rev,
 	}
 }
 

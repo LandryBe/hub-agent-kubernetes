@@ -143,7 +143,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			if test.mock != nil {
 				rev = test.mock(t, test.request)
 			}
-			h := Handler{reviewers: []Reviewer{rev}}
+			h := NewHandler([]Reviewer{rev})
 			h.ServeHTTP(rec, req)
 
 			assert.Equal(t, test.wantCodeStatus, rec.Code)
@@ -181,7 +181,7 @@ func TestHandler_ServeHTTP_reviewer(t *testing.T) {
 		OnCanReview(admissionRev.Request).TypedReturns(true).Once().
 		OnReview(admissionRev.Request).TypedReturns([]byte("patch"), nil).Once().
 		Parent
-	h := Handler{reviewers: []Reviewer{rev}}
+	h := NewHandler([]Reviewer{rev})
 
 	h.ServeHTTP(rec, req)
 
