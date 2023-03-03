@@ -147,8 +147,7 @@ type APIService struct {
 	OpenAPISpec OpenAPISpec `json:"openApiSpec"`
 }
 
-// OpenAPISpec is an OpenAPISpec. It can either be fetched from a URL, or Path/Port from the service
-// or directly in the Schema field.
+// OpenAPISpec is an OpenAPISpec. It can either be fetched from a URL, or Path/Port from the service.
 type OpenAPISpec struct {
 	URL string `json:"url,omitempty"`
 
