@@ -19,6 +19,7 @@ package platform
 
 import (
 	"context"
+	"errors"
 	"reflect"
 	"sync"
 	"time"
@@ -71,7 +72,11 @@ func (w *ConfigWatcher) AddListener(listener func(cfg Config)) {
 }
 
 func (w *ConfigWatcher) reload(ctx context.Context) error {
-	cfg, err := w.client.GetConfig(ctx)
+	cfg, err := w.client.GetConfig(ctx, w.currentCfg.UpdatedAt)
+	if errors.Is(err, notModified) {
+		return nil
+	}
+
 	if err != nil {
 		return err
 	}

@@ -76,6 +76,8 @@ type ACP struct {
 // Config holds the configuration of the offer.
 type Config struct {
 	Metrics MetricsConfig `json:"metrics"`
+
+	UpdatedAt time.Time
 }
 
 // MetricsConfig holds the metrics part of the offer config.
@@ -332,8 +334,10 @@ func (c *Client) Link(ctx context.Context, kubeID string) (string, error) {
 	return linkResp.ClusterID, nil
 }
 
+var notModified = errors.New("not modified")
+
 // GetConfig returns the agent configuration.
-func (c *Client) GetConfig(ctx context.Context) (Config, error) {
+func (c *Client) GetConfig(ctx context.Context, ifModifiedSince time.Time) (Config, error) {
 	baseURL, err := c.baseURL.Parse(path.Join(c.baseURL.Path, "config"))
 	if err != nil {
 		return Config{}, fmt.Errorf("parse endpoint: %w", err)
@@ -345,6 +349,7 @@ func (c *Client) GetConfig(ctx context.Context) (Config, error) {
 	}
 
 	req.Header.Set("Authorization", "Bearer "+c.token)
+	req.Header.Set("If-Modified-Since", ifModifiedSince.Format(time.RFC3339))
 	version.SetUserAgent(req)
 
 	resp, err := c.httpClient.Do(req)
@@ -354,6 +359,10 @@ func (c *Client) GetConfig(ctx context.Context) (Config, error) {
 	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
+		if resp.StatusCode == http.StatusNotModified {
+			return Config{}, notModified
+		}
+
 		all, _ := io.ReadAll(resp.Body)
 
 		apiErr := APIError{StatusCode: resp.StatusCode}
@@ -368,6 +377,12 @@ func (c *Client) GetConfig(ctx context.Context) (Config, error) {
 	if err = json.NewDecoder(resp.Body).Decode(&cfg); err != nil {
 		return Config{}, fmt.Errorf("decode config: %w", err)
 	}
+
+	lastModified, err := time.Parse(time.RFC3339, resp.Header.Get("Last-Modified"))
+	if err != nil {
+		return Config{}, fmt.Errorf("parse 'Last-Modified' header: %w", err)
+	}
+	cfg.UpdatedAt = lastModified
 
 	return cfg, nil
 }
