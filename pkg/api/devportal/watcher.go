@@ -183,9 +183,17 @@ func (w *Watcher) OnUpdate(oldObj, newObj interface{}) {
 
 	switch v := newObj.(type) {
 	case *hubv1alpha1.APIPortal:
-		// hash check the spec, not the status. We need to launch an update when the status is updated
+		if oldObj.(*hubv1alpha1.APIPortal).Status.Hash == v.Status.Hash &&
+			oldObj.(*hubv1alpha1.APIPortal).Status.URLs == v.Status.URLs {
+			logger.Debug().Msg("No change detected on APIPortal, skipping")
+			return
+		}
 	case *hubv1alpha1.APIGateway:
-		// hash check the spec, not the status. We need to launch an update when the status is updated
+		if oldObj.(*hubv1alpha1.APIGateway).Status.Hash == v.Status.Hash &&
+			oldObj.(*hubv1alpha1.APIGateway).Status.URLs == v.Status.URLs {
+			logger.Debug().Msg("No change detected on APIGateway, skipping")
+			return
+		}
 	case *hubv1alpha1.API:
 		if oldObj.(*hubv1alpha1.API).Status.Hash == v.Status.Hash {
 			logger.Debug().Msg("No change detected on API, skipping")
