@@ -212,7 +212,7 @@ func TestWatcher_OnUpdate(t *testing.T) {
 			desc:       "APIPortal: same hash",
 			oldObject:  &hubv1alpha1.APIPortal{Status: hubv1alpha1.APIPortalStatus{Hash: "v1"}},
 			newObject:  &hubv1alpha1.APIPortal{Status: hubv1alpha1.APIPortalStatus{Hash: "v1"}},
-			wantUpdate: false,
+			wantUpdate: true,
 		},
 		{
 			desc:       "APIPortal: different hash",
@@ -225,7 +225,7 @@ func TestWatcher_OnUpdate(t *testing.T) {
 			desc:       "APIGateway: same hash",
 			oldObject:  &hubv1alpha1.APIGateway{Status: hubv1alpha1.APIGatewayStatus{Hash: "v1"}},
 			newObject:  &hubv1alpha1.APIGateway{Status: hubv1alpha1.APIGatewayStatus{Hash: "v1"}},
-			wantUpdate: false,
+			wantUpdate: true,
 		},
 		{
 			desc:       "APIGateway: different hash",
