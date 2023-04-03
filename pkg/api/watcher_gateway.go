@@ -822,7 +822,7 @@ func (w *WatcherGateway) upsertIngressOnNamespace(ctx context.Context, namespace
 				log.Error().Err(err).
 					Str("namespace", namespace).
 					Str("ingress_name", oldIngress.Name).
-					Msg("unable to delete ingress")
+					Msg("Unable to delete ingress")
 			}
 		}
 	}
