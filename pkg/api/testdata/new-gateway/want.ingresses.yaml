@@ -2,7 +2,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: new-gateway-3695162296-hub4249197200
+  name: new-gateway-3695162296-4249197200-hub
   namespace: default
   ownerReferences:
     - apiVersion: hub.traefik.io/v1alpha1
@@ -156,7 +156,7 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: new-gateway-3695162296-hub3477267184
+  name: new-gateway-3695162296-3477267184-hub
   namespace: default
   ownerReferences:
     - apiVersion: hub.traefik.io/v1alpha1

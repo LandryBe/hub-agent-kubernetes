@@ -183,7 +183,7 @@ func (w *WatcherGateway) syncCertificates(ctx context.Context) error {
 	return nil
 }
 
-func (w *WatcherGateway) setupCertificates(ctx context.Context, gateway *hubv1alpha1.APIGateway, apisByNamespace map[string][]resolveAPI, certificate edgeingress.Certificate) error {
+func (w *WatcherGateway) setupCertificates(ctx context.Context, gateway *hubv1alpha1.APIGateway, apisByNamespace map[string][]resolvedAPI, certificate edgeingress.Certificate) error {
 	for namespace := range apisByNamespace {
 		if err := w.upsertSecret(ctx, certificate, hubDomainSecretName, namespace, gateway); err != nil {
 			return fmt.Errorf("upsert secret: %w", err)
@@ -423,13 +423,13 @@ func (w *WatcherGateway) syncChildResources(ctx context.Context, gateway *hubv1a
 	return nil
 }
 
-type resolveAPI struct {
+type resolvedAPI struct {
 	groups string
 	api    *hubv1alpha1.API
 }
 
-func (w *WatcherGateway) apisByNamespace(ctx context.Context, gateway *hubv1alpha1.APIGateway) (map[string][]resolveAPI, error) {
-	var resolveAPIs []resolveAPI
+func (w *WatcherGateway) apisByNamespace(ctx context.Context, gateway *hubv1alpha1.APIGateway) (map[string][]resolvedAPI, error) {
+	var resolvedAPIs []resolvedAPI
 	for _, accessName := range gateway.Spec.APIAccesses {
 		access, err := w.hubClientSet.HubV1alpha1().APIAccesses().Get(ctx, accessName, metav1.GetOptions{})
 		if err != nil && kerror.IsNotFound(err) {
@@ -448,7 +448,7 @@ func (w *WatcherGateway) apisByNamespace(ctx context.Context, gateway *hubv1alph
 		sort.Strings(access.Spec.Groups)
 		groups := strings.Join(access.Spec.Groups, ",")
 		for _, api := range apis {
-			resolveAPIs = append(resolveAPIs, resolveAPI{groups: groups, api: api})
+			resolvedAPIs = append(resolvedAPIs, resolvedAPI{groups: groups, api: api})
 		}
 
 		collections, err := w.findCollections(access.Spec.APICollectionSelector)
@@ -464,19 +464,19 @@ func (w *WatcherGateway) apisByNamespace(ctx context.Context, gateway *hubv1alph
 
 			for _, collectionAPI := range collectionAPIs {
 				if collection.Spec.PathPrefix == "" {
-					resolveAPIs = append(resolveAPIs, resolveAPI{groups: groups, api: collectionAPI})
+					resolvedAPIs = append(resolvedAPIs, resolvedAPI{groups: groups, api: collectionAPI})
 					continue
 				}
 
 				api := *collectionAPI
 				api.Spec.PathPrefix = path.Join(collection.Spec.PathPrefix, api.Spec.PathPrefix)
-				resolveAPIs = append(resolveAPIs, resolveAPI{groups: groups, api: &api})
+				resolvedAPIs = append(resolvedAPIs, resolvedAPI{groups: groups, api: &api})
 			}
 		}
 	}
 
-	apisByNamespace := make(map[string][]resolveAPI)
-	for _, api := range resolveAPIs {
+	apisByNamespace := make(map[string][]resolvedAPI)
+	for _, api := range resolvedAPIs {
 		apisByNamespace[api.api.Namespace] = append(apisByNamespace[api.api.Namespace], api)
 	}
 
@@ -519,14 +519,14 @@ func (w *WatcherGateway) findCollections(selector *metav1.LabelSelector) ([]*hub
 	return collections, nil
 }
 
-func (w *WatcherGateway) upsertIngresses(ctx context.Context, gateway *hubv1alpha1.APIGateway, apisByNamespace map[string][]resolveAPI) error {
-	for namespace, resolveAPIs := range apisByNamespace {
-		traefikMiddlewareName, err := w.setupStripPrefixMiddleware(ctx, gateway.Name, resolveAPIs, namespace)
+func (w *WatcherGateway) upsertIngresses(ctx context.Context, gateway *hubv1alpha1.APIGateway, apisByNamespace map[string][]resolvedAPI) error {
+	for namespace, resolvedAPIs := range apisByNamespace {
+		traefikMiddlewareName, err := w.setupStripPrefixMiddleware(ctx, gateway.Name, resolvedAPIs, namespace)
 		if err != nil {
 			return fmt.Errorf("setup stripPrefix middleware: %w", err)
 		}
 
-		err = w.upsertIngressesOnNamespace(ctx, namespace, gateway, resolveAPIs, traefikMiddlewareName)
+		err = w.upsertIngressesOnNamespace(ctx, namespace, gateway, resolvedAPIs, traefikMiddlewareName)
 		if err != nil {
 			return fmt.Errorf("build ingress for hub domain and namespace %q: %w", namespace, err)
 		}
@@ -535,9 +535,9 @@ func (w *WatcherGateway) upsertIngresses(ctx context.Context, gateway *hubv1alph
 	return nil
 }
 
-func (w *WatcherGateway) setupStripPrefixMiddleware(ctx context.Context, gatewayName string, resolveAPIS []resolveAPI, namespace string) (string, error) {
+func (w *WatcherGateway) setupStripPrefixMiddleware(ctx context.Context, gatewayName string, resolvedAPIS []resolvedAPI, namespace string) (string, error) {
 	var apis []*hubv1alpha1.API
-	for _, a := range resolveAPIS {
+	for _, a := range resolvedAPIS {
 		apis = append(apis, a.api)
 	}
 
@@ -625,7 +625,7 @@ func (w *WatcherGateway) upsertIngress(ctx context.Context, ingress *netv1.Ingre
 }
 
 // cleanupNamespaces cleans namespace from APIGateway resources that are no longer referenced.
-func (w *WatcherGateway) cleanupNamespaces(ctx context.Context, gateway *hubv1alpha1.APIGateway, apisByNamespace map[string][]resolveAPI) error {
+func (w *WatcherGateway) cleanupNamespaces(ctx context.Context, gateway *hubv1alpha1.APIGateway, apisByNamespace map[string][]resolvedAPI) error {
 	managedByHub, err := labels.NewRequirement("app.kubernetes.io/managed-by", selection.Equals, []string{"traefik-hub"})
 	if err != nil {
 		return fmt.Errorf("create managed by hub requirement: %w", err)
@@ -691,7 +691,7 @@ func (w *WatcherGateway) cleanupNamespaces(ctx context.Context, gateway *hubv1al
 	return nil
 }
 
-func (w *WatcherGateway) upsertIngressesOnNamespace(ctx context.Context, namespace string, gateway *hubv1alpha1.APIGateway, resolveAPIs []resolveAPI, traefikMiddlewareName string) error {
+func (w *WatcherGateway) upsertIngressesOnNamespace(ctx context.Context, namespace string, gateway *hubv1alpha1.APIGateway, resolvedAPIs []resolvedAPI, traefikMiddlewareName string) error {
 	managedByHub, err := labels.NewRequirement("app.kubernetes.io/managed-by", selection.Equals, []string{"traefik-hub"})
 	if err != nil {
 		return fmt.Errorf("create managed by hub requirement: %w", err)
@@ -704,7 +704,7 @@ func (w *WatcherGateway) upsertIngressesOnNamespace(ctx context.Context, namespa
 	}
 
 	apisByGroups := make(map[string][]*hubv1alpha1.API)
-	for _, a := range resolveAPIs {
+	for _, a := range resolvedAPIs {
 		apisByGroups[a.groups] = append(apisByGroups[a.groups], a.api)
 	}
 
@@ -891,7 +891,7 @@ func getTraefikStripPrefixMiddlewareName(namespace, gatewayName string) (string,
 }
 
 // getHubDomainIngressName compute the ingress name for hub domain from the gateway name.
-// The name follow this format: {gateway-name}-{hash(gateway-name)}-hub{hash(groups)}
+// The name follow this format: {gateway-name}-{hash(gateway-name)}-{hash(groups)}-hub
 // This hash is here to reduce the chance of getting a collision on an existing ingress.
 func getHubDomainIngressName(name, groups string) (string, error) {
 	h, err := hash(groups)
@@ -904,7 +904,7 @@ func getHubDomainIngressName(name, groups string) (string, error) {
 		return "", err
 	}
 
-	return fmt.Sprintf("%s-hub%d", name, h), nil
+	return fmt.Sprintf("%s-%d-hub", name, h), nil
 }
 
 // getCustomDomainsIngressName compute the ingress name for custom domains from the gateway name.
