@@ -21,6 +21,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -383,7 +384,7 @@ func TestTraefikIngress_ReviewAddsAuthentication(t *testing.T) {
 				AnnotationHubAuth:      "my-policy",
 				AnnotationHubAuthGroup: "dev",
 				"custom-annotation":    "foobar",
-				"traefik.ingress.kubernetes.io/router.middlewares": "custom-middleware@kubernetescrd,test-zz-my-policy-dev@kubernetescrd",
+				"traefik.ingress.kubernetes.io/router.middlewares": "custom-middleware@kubernetescrd,test-zz-my-policy-378875130@kubernetescrd",
 			},
 			wantAuthResponseHeaders: []string{"fwdHeader"},
 		},
@@ -522,7 +523,11 @@ func TestTraefikIngress_ReviewAddsAuthentication(t *testing.T) {
 			grps := test.ingAnno[AnnotationHubAuthGroup]
 			var suffix string
 			if grps != "" {
-				suffix = "-" + grps
+				var h uint32
+				h, err = hash(grps)
+				require.NoError(t, err)
+
+				suffix = fmt.Sprintf("-%d", h)
 			}
 
 			m, err := traefikClientSet.TraefikV1alpha1().Middlewares("test").

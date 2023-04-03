@@ -21,9 +21,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"hash/fnv"
 	"net/url"
 	"reflect"
-	"strings"
 
 	"github.com/rs/zerolog/log"
 	"github.com/traefik/hub-agent-kubernetes/pkg/acp"
@@ -87,7 +87,12 @@ func (m *FwdAuthMiddlewares) setupMiddleware(ctx context.Context, name, namespac
 	logger := log.Ctx(ctx)
 
 	if groups != "" {
-		name = name + "-" + strings.ReplaceAll(groups, ",", "-")
+		h, err := hash(groups)
+		if err != nil {
+			return "", fmt.Errorf("unable to hash groups: %w", err)
+		}
+
+		name = name + "-" + fmt.Sprintf("%d", h)
 	}
 
 	currentMiddleware, err := m.findMiddleware(ctx, name, namespace)
@@ -179,4 +184,14 @@ func (m *FwdAuthMiddlewares) createMiddleware(ctx context.Context, name, namespa
 	}
 
 	return nil
+}
+
+func hash(name string) (uint32, error) {
+	h := fnv.New32()
+
+	if _, err := h.Write([]byte(name)); err != nil {
+		return 0, fmt.Errorf("generate hash: %w", err)
+	}
+
+	return h.Sum32(), nil
 }
